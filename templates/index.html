@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PIAC</title>
+</head>
+<body>
+    <h1>PIAC</h1>
+    <a href="templates/parts.html">Parts</a>
+    <a href="templates/configurations.html">Configurations</a>
+
+    <form method="post" action="/search">
+        <label>
+            Search:
+            <input type="text" name="search">
+        </label>
+
+        <button type="submit">Search</button>
+    </form>
+    <!-- parts -->
+    <table>
+	<tbody>
+	<tr><td>Brand</td><td>Model</td><td>Description</td></tr>
+	<!-- values shall be hyperlinks for opening -->
+        {{range .Values}}
+        <tr><td>{{.}}</td><td>{{.}}</td><td>{{.}}</td></tr>
+        {{end}}
+	<tbody>
+    </table>
+    <!-- configurations -->
+    <table>
+        <tbody>
+	<tr><td>Name</td><td>Description</td></tr>
+        {{range .Values}}
+        <tr><td>{{.}}</td><td>{{.}}</td></tr>
+        {{end}}
+	</tbody>
+    </table>
+</body>
+</html>

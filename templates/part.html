@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Part</title>
+</head>
+<body>
+    <h1>Part</h1>
+
+    <!-- parts -->
+    <table>
+	<tbody>
+	<tr><td>Brand</td><td>Model</td><td>Description</td><td>Count</td><td>Price</td><td>Image</td><td><!-- edit --></td></tr>
+        {{range .Values}}
+        <tr><td>{{.}}</td><td>{{.}}</td><td>{{.}}</td><td>{{.}}</td><td>{{.}}</td><td>{{.}}</td><td><a href="">Edit</a></td></tr>
+        {{end}}
+	<tbody>
+    </table>
+</body>
+</html>
