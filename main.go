@@ -48,6 +48,7 @@ func partsHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Image : "",
 	    InternalId : 2,
 	}
+	// TODO: perform an SQL query and map the result to PartData array
 	parts := []PartData{ examplePartData, examplePartData2 }
 	partsTemplate.Execute(writer, parts)
 }
@@ -62,6 +63,10 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Image : "",
 	    InternalId : 1,
 	}
+	// TODO: get ID from URL
+	// if empty then all fields shall be empty and a STORE operation is to be performed
+	// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
+	//	in this case an update need to be performed
 	edit_partTemplate.Execute(writer, examplePartData)
 }
 
