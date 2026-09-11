@@ -18,6 +18,7 @@ type PartData struct {
     Count int16
     Price int32
     Image string
+    InternalId int32
 }
 
 type ConfigurationData struct {
@@ -36,6 +37,7 @@ func partHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Count : 1,
 	    Price : 4000,
 	    Image : "",
+	    InternalId : 1,
 	}
 	examplePartData2 := PartData {
 	    Brand : "Sunrace",
@@ -44,6 +46,7 @@ func partHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Count : 1,
 	    Price : 4000,
 	    Image : "",
+	    InternalId : 2,
 	}
 	parts := []PartData{ examplePartData, examplePartData2 }
 	partsTemplate.Execute(writer, parts)
