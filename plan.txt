@@ -1,0 +1,351 @@
+
+1; goal:
+-----------------------
+- stores inventory of bike parts
+- bike parts can be combined, a combination of parts can be stored with a name and description
+
+2; entities
+-----------------------
+bike part properties
+- brand
+- model id
+- count: e.g. 20 bowden house end cup
+- description e.g. cassette 11-34, frame size, tyre size, chain length, ...
+- price
+- picture
+
+configuration properties:
+- name e.g. Anti's Scott tour bike
+- description: long desc, maybe a TODO list, what shall be collected if there are some parts missing OR if it's a brand (ready made bike) this can contain the description of parts
+- reference to parts
+- additional price: can be used for a collection of additional costs: shipping, whole price of brand bike, assembly cost
+- additional price description
+- price
+
+3; functions:
+-----------------------
+- add part: raise a warning if brand and model matches "it is a duplicate? do you want to continue?"
+- edit part
+- delete part
+- add confguration
+- edit configuration
+- delete configuration
+- list add parts
+- list all configurations
+- search: search in meaningful fields : name (conf), model (part),  brand (part), description ( part, conf), brand.
+
+4; pages
+-----------------------
+4.1 main page
+- search field on top
+- button: parts
+- button: configurations
+
+4.1.1 search field:
+see search details 3; functions
+result: 
+list:	- hyperlink: (parts first) brand, model id, description (first 32 char), price
+	- hyperlink: config:name, description first 32 char, price (calculated)
+4.2. parts page
+list all fields, buttons: edit next to item
+4.2.1 edit parts
+same as parts page but everything is editable, buttons: save, delete, cancel
+4.2.2 add part page
+same as edit parts, but everything is empty
+
+4.3 configurations page
+list all fields, buttons: edit next to item
+4.3.1 edit conf page
+same as conf page but everything is editable, buttons: save, delete, cancel
+4.3.2 add conf page
+same as edit conf page but everything is editable
+
+------------------------------------------------
+Absolutely. Go is a very good fit for what you're describing, especially for a small self-hosted SOHO application.
+
+Go has HTML templating built into its standard library, so you don't need a web framework just to generate HTML.
+
+The main package is html/template.
+A very simple Go website
+
+You could have:
+
+myapp/
+├── main.go
+├── app.db
+├── templates/
+│   ├── index.html
+│   └── form.html
+└── static/
+    └── style.css
+
+Your Go program can serve the HTML:
+
+package main
+
+import (
+	"html/template"
+	"net/http"
+)
+
+var tmpl = template.Must(template.ParseFiles("templates/index.html"))
+
+func main() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, map[string]string{
+			"Title": "My SOHO App",
+		})
+	})
+
+	http.Handle("/static/",
+		http.StripPrefix("/static/",
+			http.FileServer(http.Dir("static")),
+		))
+
+	http.ListenAndServe(":8080", nil)
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ .Title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>{{ .Title }}</h1>
+
+    <form method="post" action="/save">
+        <label>
+            Name:
+            <input type="text" name="name">
+        </label>
+
+        <button type="submit">Save</button>
+    </form>
+</body>
+</html>
+
+You can even embed the website's HTML/CSS/JS into the Go executable:
+
+//go:embed templates static
+var files embed.FS
+
+Then compile:
+
+myapp.exe
+
+and your deployment can essentially become:
+
+myapp.exe
+app.db
+
+1. Executing SQL in Go
+
+Go provides the database/sql package for this.
+
+You open the database once when your application starts:
+
+db, err := sql.Open("sqlite", "app.db")
+if err != nil {
+    log.Fatal(err)
+}
+defer db.Close()
+
+You need a SQLite driver. One modern option is modernc.org/sqlite, which doesn't require CGO.
+
+Then you can execute SQL normally:
+
+_, err := db.Exec(`
+    CREATE TABLE IF NOT EXISTS people (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT
+    )
+`)
+if err != nil {
+    log.Fatal(err)
+}
+
+For inserting data:
+
+_, err := db.Exec(
+    "INSERT INTO people (name, email) VALUES (?, ?)",
+    name,
+    email,
+)
+
+The ? placeholders are important. You generally shouldn't construct SQL by concatenating user input.
+
+2. Reading data
+
+Suppose you want to display all people.
+
+You execute:
+
+rows, err := db.Query(`
+    SELECT id, name, email
+    FROM people
+    ORDER BY name
+`)
+if err != nil {
+    http.Error(w, "Database error", http.StatusInternalServerError)
+    return
+}
+defer rows.Close()
+
+Then iterate through the results:
+
+type Person struct {
+    ID    int
+    Name  string
+    Email string
+}
+
+var people []Person
+
+for rows.Next() {
+    var p Person
+
+    err := rows.Scan(&p.ID, &p.Name, &p.Email)
+    if err != nil {
+        http.Error(w, "Database error", http.StatusInternalServerError)
+        return
+    }
+
+    people = append(people, p)
+}
+
+Now people is ordinary Go data:
+
+people
+├── Person{ID: 1, Name: "John", Email: "..."}
+├── Person{ID: 2, Name: "Jane", Email: "..."}
+└── Person{ID: 3, Name: "Bob", Email: "..."}
+
+3. Generate HTML from those results
+
+This is where html/template comes in.
+
+Suppose people.html contains:
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>People</title>
+</head>
+<body>
+
+<h1>People</h1>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+    </tr>
+
+    {{ range . }}
+    <tr>
+        <td>{{ .ID }}</td>
+        <td>{{ .Name }}</td>
+        <td>{{ .Email }}</td>
+    </tr>
+    {{ end }}
+
+</table>
+
+</body>
+</html>
+
+Then your HTTP handler does:
+
+func peopleHandler(w http.ResponseWriter, r *http.Request) {
+    rows, err := db.Query(`
+        SELECT id, name, email
+        FROM people
+        ORDER BY name
+    `)
+    if err != nil {
+        http.Error(w, "Database error", 500)
+        return
+    }
+    defer rows.Close()
+
+    var people []Person
+
+    for rows.Next() {
+        var p Person
+
+        if err := rows.Scan(&p.ID, &p.Name, &p.Email); err != nil {
+            http.Error(w, "Database error", 500)
+            return
+        }
+
+        people = append(people, p)
+    }
+
+    err = peopleTemplate.Execute(w, people)
+    if err != nil {
+        log.Println(err)
+    }
+}
+
+And that's basically it.
+
+The browser receives ordinary HTML:
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+    </tr>
+
+    <tr>
+        <td>1</td>
+        <td>John</td>
+        <td>john@example.com</td>
+    </tr>
+
+    <tr>
+        <td>2</td>
+        <td>Jane</td>
+        <td>jane@example.com</td>
+    </tr>
+</table>
+
+The browser doesn't know or care that SQLite or Go was involved.
+
+One thing I think you'll particularly like
+
+You don't have to build an API at all.
+
+For a traditional internal application, you can simply do:
+
+GET /people
+        ↓
+SQL SELECT
+        ↓
+Go structs
+        ↓
+HTML template
+        ↓
+HTTP response
+
+and:
+
+POST /people
+        ↓
+HTML form
+        ↓
+Go handler
+        ↓
+SQL INSERT
+        ↓
+redirect → GET /people
+
+That's a very old-school server-rendered web application, and for a small SOHO application it's arguably much simpler than introducing React/Angular/etc.
+
+If you want, I can show you a complete tiny Go + SQLite application in ~100 lines with a database table, HTML form, INSERT, SELECT, and rendered table, so you can see the entire thing working as one program.
+
+
