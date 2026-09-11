@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Configuration</title>
+    <title>Configurations</title>
 </head>
 <body>
-    <h1>Configuration</h1>
+    <h1>Configurations</h1>
 
-    <table border="1">
-	<tbody>
-	<tr><td>Name</td><td>Description</td><td>Price</td><td>Additional price</td><td>Additional price description</td><td><!-- edit --></td></tr>
+    <table border="1" title="Configurations">
+	    <tr><td>Name</td><td>Description</td> <td>Parts</td> <td>Price</td><td>Additional price</td><td>Additional price description</td><td><!-- edit --></td></tr>
 	{{range .}}
-	<tr> <td>{{.Name}}</td> <td>{{.Description}}</td> <td>{{.Price}}</td> <td>{{.AdditionalPrice}}</td> <td>{{.AdditionalPriceDesc}}</td> <td><a href="edit_configuration.html?id={{.InternalId}}">Edit</a></td> </tr>
+	<tr>	<td>{{.Name}}</td> <td>{{.Description}}</td>
+		<td> <!-- parts -->
+		    <table border="1" title="Parts">
+			<tr><td>Brand</td><td>Model</td><td><!-- edit --></td></tr>
+			{{range .Parts}}
+			<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td><a href="edit_part.html?id={{.InternalId}}">Edit</a></td></tr>
+			{{end}}
+		    </table>
+		</td>
+    		<td>{{.Price}}</td>
+		<td>{{.AdditionalPrice}}</td>
+		<td>{{.AdditionalPriceDesc}}</td>
+		<td><a href="edit_configuration.html?id={{.InternalId}}">Edit</a></td>
+	</tr>
 	{{end}}
-	</tbody>
     </table>
-    <!-- parts -->
-    <!--
-    <table>
-        {{range .Values}}
-	<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td>{{.Description}}</td><td><a href="edit_part.html?id={{.InternalId}}">Edit</a></td></tr>
-        {{end}}
-    </table>
-    -->
 </body>
 </html>
