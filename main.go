@@ -37,7 +37,16 @@ func partHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Price : 4000,
 	    Image : "",
 	}
-	partsTemplate.Execute(writer, examplePartData)
+	examplePartData2 := PartData {
+	    Brand : "Sunrace",
+	    Model : "RD90",
+	    Description : "max tooth 28",
+	    Count : 1,
+	    Price : 4000,
+	    Image : "",
+	}
+	parts := []PartData{ examplePartData, examplePartData2 }
+	partsTemplate.Execute(writer, parts)
 }
 
 func main() {
