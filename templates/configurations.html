@@ -10,8 +10,9 @@
 	<tbody>
 	<tr><td>Name</td><td>Description</td><td>Price</td><td>Additional price</td><td>Additional price description</td><td><!-- edit --></td></tr>
 	{{range .}}
-	<tr><td>{{.Name}}</td><td>{{.Description}}</td><td>{{.Price}}</td><td>{{.AdditionalPrice}}</td><td>{{.AdditionalPriceDesc}}</td><td><a href="edit_configuration.html?id={{.InternalId}}">Edit</a></td></tr>
+	<tr> <td>{{.Name}}</td> <td>{{.Description}}</td> <td>{{.Price}}</td> <td>{{.AdditionalPrice}}</td> <td>{{.AdditionalPriceDesc}}</td> <td><a href="edit_configuration.html?id={{.InternalId}}">Edit</a></td> </tr>
 	{{end}}
+	</tbody>
     </table>
     <!-- parts -->
     <!--
@@ -19,7 +20,6 @@
         {{range .Values}}
 	<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td>{{.Description}}</td><td><a href="edit_part.html?id={{.InternalId}}">Edit</a></td></tr>
         {{end}}
-	<tbody>
     </table>
     -->
 </body>

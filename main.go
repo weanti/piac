@@ -27,6 +27,7 @@ type ConfigurationData struct {
     Price int32
     AdditionalPrice int32
     AdditionalPriceDesc string
+    InternalId int32
 }
 
 func partsHandler( writer http.ResponseWriter, request *http.Request ) {
@@ -78,6 +79,7 @@ func configurationHandler( writer http.ResponseWriter, request *http.Request ) {
 		Price : 162000,
 		AdditionalPrice : 0,
 		AdditionalPriceDesc : "",
+		InternalId : 1,
 	}
 	configurationTemplate.Execute( writer, []ConfigurationData { exampleConfigurationData } )
 }
