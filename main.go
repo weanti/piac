@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 )
 
 //var tmpl = template.Must( template.ParseFiles("templates/index.html","templates/part.html", "templates/edit_part.html", "templates/configuration.html", "templates/edit_configuration.html"))
-var partTemplate = template.Must( template.ParseFiles("templates/part.html") )
+var partsTemplate = template.Must( template.ParseFiles("templates/parts.html") )
 var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.html"))
 var configurationTemplate = template.Must( template.ParseFiles( "templates/configuration.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
@@ -38,11 +37,7 @@ func partHandler( writer http.ResponseWriter, request *http.Request ) {
 	    Price : 4000,
 	    Image : "",
 	}
-	e := partTemplate.Execute(writer, examplePartData)
-	fmt.Println("partHandler called")
-	if e != nil {
-		fmt.Println( e )
-	}
+	partsTemplate.Execute(writer, examplePartData)
 }
 
 func main() {
