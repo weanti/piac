@@ -8,7 +8,7 @@ import (
 //var tmpl = template.Must( template.ParseFiles("templates/index.html","templates/part.html", "templates/edit_part.html", "templates/configuration.html", "templates/edit_configuration.html"))
 var partsTemplate = template.Must( template.ParseFiles("templates/parts.html") )
 var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.html"))
-var configurationTemplate = template.Must( template.ParseFiles( "templates/configuration.html"))
+var configurationTemplate = template.Must( template.ParseFiles( "templates/configurations.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
 
 type PartData struct {
@@ -70,6 +70,18 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request ) {
 	edit_partTemplate.Execute(writer, examplePartData)
 }
 
+func configurationHandler( writer http.ResponseWriter, request *http.Request ) {
+
+	exampleConfigurationData := ConfigurationData {
+		Name : "Csepel Rapid",
+		Description : "flatbar, 2x8, integrated crankset, 50/34, 35-622 Schwalbe",
+		Price : 162000,
+		AdditionalPrice : 0,
+		AdditionalPriceDesc : "",
+	}
+	configurationTemplate.Execute( writer, []ConfigurationData { exampleConfigurationData } )
+}
+
 func main() {
 
 
@@ -78,6 +90,6 @@ func main() {
 	})
 	http.HandleFunc("/templates/parts.html", partsHandler)
 	http.HandleFunc("/templates/edit_part.html", editPartHandler)
-//	http.handleFunc("/configurations", configurationHandler)
+	http.HandleFunc("/templates/configurations.html", configurationHandler)
 	http.ListenAndServe(":8080", nil)
 }
