@@ -29,7 +29,7 @@ type ConfigurationData struct {
     AdditionalPriceDesc string
 }
 
-func partHandler( writer http.ResponseWriter, request *http.Request ) {
+func partsHandler( writer http.ResponseWriter, request *http.Request ) {
 	examplePartData := PartData {
 	    Brand : "Shimano",
 	    Model : "FD-A070",
@@ -52,13 +52,27 @@ func partHandler( writer http.ResponseWriter, request *http.Request ) {
 	partsTemplate.Execute(writer, parts)
 }
 
+func editPartHandler( writer http.ResponseWriter, request *http.Request ) {
+	examplePartData := PartData {
+	    Brand : "Shimano",
+	    Model : "FD-A070",
+	    Description : "black, max tooth 50",
+	    Count : 1,
+	    Price : 4000,
+	    Image : "",
+	    InternalId : 1,
+	}
+	edit_partTemplate.Execute(writer, examplePartData)
+}
+
 func main() {
 
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
 	})
-	http.HandleFunc("/templates/parts.html", partHandler)
+	http.HandleFunc("/templates/parts.html", partsHandler)
+	http.HandleFunc("/templates/edit_part.html", editPartHandler)
 //	http.handleFunc("/configurations", configurationHandler)
 	http.ListenAndServe(":8080", nil)
 }
