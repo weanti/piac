@@ -32,7 +32,7 @@ func createDatabaseTables(db *sql.DB) error {
 						Price INTEGER,
 						AdditionalPrice INTEGER,
 						AdditionalPriceDesc TEXT,
-						InternalId INTEGER` )
+						InternalId INTEGER)` )
 						// TODO: somehow store the references here
 	if err != nil {
 		return err
@@ -64,6 +64,10 @@ func main() {
 	} else {
 		fmt.Println("Opening existing database.")
 		_, err = db.Query("INSERT INTO Parts ( Brand, Model, Count, Price ) VALUES ('Shimano', 'A070',1,4000);")
+		if err != nil {
+			fmt.Println(err)
+		}
+		_, err = db.Query("INSERT INTO Configurations ( Name, Description, Price ) VALUES ('Csepel Rapid', '50/34, prowheel', 160000)")
 		if err != nil {
 			fmt.Println(err)
 		}
