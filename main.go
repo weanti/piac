@@ -53,7 +53,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		_, err = db.Query("INSERT INTO Configurations ( Name, Description, Price ) VALUES ('Csepel Rapid', '50/34, prowheel', 160000)")
+		_, err = db.Query("INSERT INTO Configurations ( Name, Description, Price ) VALUES ('Csepel Rapid', NULL, 160000)")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -63,6 +63,6 @@ func main() {
 	})
 	http.HandleFunc("/templates/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_part.html", editPartHandler)
-	http.HandleFunc("/templates/configurations.html", configurationHandler)
+	http.HandleFunc("/templates/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
 	http.ListenAndServe(":8080", nil)
 }

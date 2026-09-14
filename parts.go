@@ -16,19 +16,19 @@ type PartData struct {
 
 func createPartsTable(db *sql.DB) error {
 	_, err := db.Query(`CREATE TABLE Parts(
-						Brand TEXT,
-						Model TEXT,
-						Description TEXT,
-						Count INTEGER,
-						Price INTEGER,
+						Brand TEXT NOT NULL,
+						Model TEXT NOT NULL, 
+						Description TEXT DEFAULT(''),
+						Count INTEGER DEFAULT(1),
+						Price INTEGER DEFAULT(0),
 						Image BLOB,
-						InternalId INTEGER )` )
+						InternalId INTEGER );` )
 	return err
 }
 
 func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var parts []PartData
-	rows, err := db.Query( `SELECT * from Parts` )
+	rows, err := db.Query( `SELECT * from Parts;` )
 	for rows.Next() {
 		var tempPartData PartData 
 		var brand, model, description, image *string
