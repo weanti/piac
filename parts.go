@@ -1,6 +1,8 @@
 package main
 
-import ( "net/http" )
+import ( "net/http"
+	"database/sql"
+		"fmt")
 
 type PartData struct {
     Brand string
@@ -12,27 +14,49 @@ type PartData struct {
     InternalId int32
 }
 
-func partsHandler( writer http.ResponseWriter, request *http.Request ) {
-	examplePartData := PartData {
-	    Brand : "Shimano",
-	    Model : "FD-A070",
-	    Description : "black, max tooth 50",
-	    Count : 1,
-	    Price : 4000,
-	    Image : "",
-	    InternalId : 1,
+func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	var parts []PartData
+	rows, err := db.Query( `SELECT * from Parts` )
+	for rows.Next() {
+		var tempPartData PartData 
+		var brand, model, description, image *string
+		var count *int16
+		var price, internalId *int32
+
+		err = rows.Scan( 	&brand,
+							&model,
+							&description,
+							&count,
+							&price,
+							&image,
+							&internalId )
+		if err != nil {
+			fmt.Println( err )
+		} else {
+			if brand != nil {
+				tempPartData.Brand = *brand
+			}
+			if model != nil {
+				tempPartData.Model = *model
+			}
+			if description != nil {
+				tempPartData.Description = *description
+			}
+			if count != nil {
+				tempPartData.Count = *count
+			}
+			if price != nil {
+				tempPartData.Price = *price
+			}
+			if image != nil {
+				tempPartData.Image = *image
+			}
+			if internalId != nil {
+				tempPartData.InternalId = *internalId
+			}
+			parts = append( parts, tempPartData )
+		}
 	}
-	examplePartData2 := PartData {
-	    Brand : "Sunrace",
-	    Model : "RD90",
-	    Description : "max tooth 28",
-	    Count : 1,
-	    Price : 4000,
-	    Image : "",
-	    InternalId : 2,
-	}
-	// TODO: perform an SQL query and map the result to PartData array
-	parts := []PartData{ examplePartData, examplePartData2 }
 	partsTemplate.Execute(writer, parts)
 }
 

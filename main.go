@@ -75,7 +75,7 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
 	})
-	http.HandleFunc("/templates/parts.html", partsHandler)
+	http.HandleFunc("/templates/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_part.html", editPartHandler)
 	http.HandleFunc("/templates/configurations.html", configurationHandler)
 	http.ListenAndServe(":8080", nil)
