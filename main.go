@@ -15,25 +15,11 @@ var configurationTemplate = template.Must( template.ParseFiles( "templates/confi
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
 
 func createDatabaseTables(db *sql.DB) error {
-	_, err := db.Query(`CREATE TABLE Parts(
-						Brand TEXT,
-						Model TEXT,
-						Description TEXT,
-						Count INTEGER,
-						Price INTEGER,
-						Image BLOB,
-						InternalId INTEGER )` )
+	err := createPartsTable( db )
 	if err != nil {
 		return err
 	}
-	_, err = db.Query(`CREATE TABLE Configurations(
-						Name TEXT,
-						Description TEXT,
-						Price INTEGER,
-						AdditionalPrice INTEGER,
-						AdditionalPriceDesc TEXT,
-						InternalId INTEGER)` )
-						// TODO: somehow store the references here
+	err = createConfigurationsTable( db )
 	if err != nil {
 		return err
 	}

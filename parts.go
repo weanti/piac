@@ -14,6 +14,18 @@ type PartData struct {
     InternalId int32
 }
 
+func createPartsTable(db *sql.DB) error {
+	_, err := db.Query(`CREATE TABLE Parts(
+						Brand TEXT,
+						Model TEXT,
+						Description TEXT,
+						Count INTEGER,
+						Price INTEGER,
+						Image BLOB,
+						InternalId INTEGER )` )
+	return err
+}
+
 func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var parts []PartData
 	rows, err := db.Query( `SELECT * from Parts` )

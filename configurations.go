@@ -1,6 +1,7 @@
 package main
 
-import( "net/http" )
+import( "database/sql"
+		"net/http" )
 
 type ConfigurationData struct {
     Name string
@@ -10,6 +11,18 @@ type ConfigurationData struct {
     AdditionalPriceDesc string
     Parts []PartData
     InternalId int32
+}
+
+func createConfigurationsTable( db *sql.DB ) error {
+	_, err := db.Query(`CREATE TABLE Configurations(
+						Name TEXT,
+						Description TEXT,
+						Price INTEGER,
+						AdditionalPrice INTEGER,
+						AdditionalPriceDesc TEXT,
+						InternalId INTEGER)` )
+						// TODO: somehow store the references here
+	return err
 }
 
 func configurationHandler( writer http.ResponseWriter, request *http.Request ) {
