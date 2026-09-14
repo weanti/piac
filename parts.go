@@ -21,27 +21,26 @@ func createPartsTable(db *sql.DB) error {
 						Description TEXT DEFAULT(''),
 						Count INTEGER DEFAULT(1),
 						Price INTEGER DEFAULT(0),
-						Image BLOB,
-						InternalId INTEGER );` )
+						Image BLOB);` )
 	return err
 }
 
 func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var parts []PartData
-	rows, err := db.Query( `SELECT * from Parts;` )
+	rows, err := db.Query( `SELECT rowid,* from Parts;` )
 	for rows.Next() {
 		var tempPartData PartData 
 		var brand, model, description, image *string
 		var count *int16
 		var price, internalId *int32
 
-		err = rows.Scan( 	&brand,
-							&model,
-							&description,
-							&count,
-							&price,
-							&image,
-							&internalId )
+		err = rows.Scan(&internalId,
+						&brand,
+						&model,
+						&description,
+						&count,
+						&price,
+						&image)
 		if err != nil {
 			fmt.Println( err )
 		} else {

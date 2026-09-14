@@ -20,26 +20,25 @@ func createConfigurationsTable( db *sql.DB ) error {
 						Description TEXT DEFAULT(''),
 						Price INTEGER DEFAULT(0),
 						AdditionalPrice INTEGER DEFAULT(0),
-						AdditionalPriceDesc TEXT DEFAULT(''),
-						InternalId INTEGER);` )
+						AdditionalPriceDesc TEXT DEFAULT(''));` )
 						// TODO: somehow store the references here
 	return err
 }
 
 func configurationHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
 	var configurations []ConfigurationData
-	rows, err := db.Query(`SELECT * from Configurations;`)
+	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
 	for rows.Next() {
 		var tempConfigurationData ConfigurationData
 		var name, description, additionalPriceDesc *string
 		var price, additionalPrice, internalId *int32
 		// TODO: array of Parts internal IDs
-		err = rows.Scan(&name,
+		err = rows.Scan(&internalId,
+						&name,
 						&description,
 						&price,
 						&additionalPrice,
-						&additionalPriceDesc,
-						&internalId )
+						&additionalPriceDesc)
 		if err != nil {
 			fmt.Println(err)
 		} else {
@@ -69,5 +68,4 @@ func configurationHandler( writer http.ResponseWriter, request *http.Request, db
 	// if empty then all fields shall be empty and a STORE operation is to be performed
 	// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
 	//	in this case an update need to be performed
-//	configurationTemplate.Execute(writer, examplePartData)
 }
