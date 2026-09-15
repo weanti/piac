@@ -90,19 +90,24 @@ func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB
 
 func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
-	fmt.Println("url values : ", request.URL.Query().Get("id"))
-	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
-	if err != nil {
-		fmt.Println(err)
+	var tempPartData PartData
+	if id == "" {
+		fmt.Println("new item")
+		tempPartData = PartData{}
 	} else {
-		tempPartData, err := fromQueryResult( rows )
+		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
 		if err != nil {
+			fmt.Println(err)
 		} else {
-			// TODO: get ID from URL
-			// if empty then all fields shall be empty and a STORE operation is to be performed
-			// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
-			//	in this case an update need to be performed
-			edit_partTemplate.Execute(writer, tempPartData)
+			tempPartData, err = fromQueryResult( rows )
+			if err != nil {
+			} else {
+				// TODO: get ID from URL
+				// if empty then all fields shall be empty and a STORE operation is to be performed
+				// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
+				//	in this case an update need to be performed
+			}
 		}
 	}
+	edit_partTemplate.Execute(writer, tempPartData)
 }
