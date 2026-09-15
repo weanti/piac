@@ -2,7 +2,8 @@ package main
 
 import ( "net/http"
 	"database/sql"
-		"fmt")
+	"errors"
+	"fmt")
 
 type PartData struct {
     Brand string
@@ -25,16 +26,13 @@ func createPartsTable(db *sql.DB) error {
 	return err
 }
 
-func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	var parts []PartData
-	rows, err := db.Query( `SELECT rowid,* from Parts;` )
-	for rows.Next() {
-		var tempPartData PartData 
-		var brand, model, description, image *string
-		var count *int16
-		var price, internalId *int32
-
-		err = rows.Scan(&internalId,
+func fromQueryResult( rows *sql.Rows ) (PartData, error) {
+	var tempPartData PartData 
+	var brand, model, description, image *string
+	var count *int16
+	var price, internalId *int32
+	if rows.Next() {
+		err := rows.Scan(&internalId,
 						&brand,
 						&model,
 						&description,
@@ -43,47 +41,68 @@ func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB
 						&image)
 		if err != nil {
 			fmt.Println( err )
-		} else {
-			if brand != nil {
-				tempPartData.Brand = *brand
+			return PartData{}, err 
+		}
+		if brand != nil {
+			tempPartData.Brand = *brand
+		}
+		if model != nil {
+			tempPartData.Model = *model
+		}
+		if description != nil {
+			tempPartData.Description = *description
+		}
+		if count != nil {
+			tempPartData.Count = *count
+		}
+		if price != nil {
+			tempPartData.Price = *price
+		}
+		if image != nil {
+			tempPartData.Image = *image
+		}
+		if internalId != nil {
+			tempPartData.InternalId = *internalId
+		}
+		return tempPartData, nil
+	} else {
+		return PartData{}, errors.New( "no data available" )
+	}
+}
+
+func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	var parts []PartData
+	rows, err := db.Query( `SELECT rowid,* from Parts;` )
+	if err != nil {
+		fmt.Println( err )
+	} else {
+		for {
+			tempPartData, err := fromQueryResult( rows )
+			if err == nil {
+				parts = append( parts, tempPartData )
+			} else {
+				break
 			}
-			if model != nil {
-				tempPartData.Model = *model
-			}
-			if description != nil {
-				tempPartData.Description = *description
-			}
-			if count != nil {
-				tempPartData.Count = *count
-			}
-			if price != nil {
-				tempPartData.Price = *price
-			}
-			if image != nil {
-				tempPartData.Image = *image
-			}
-			if internalId != nil {
-				tempPartData.InternalId = *internalId
-			}
-			parts = append( parts, tempPartData )
 		}
 	}
 	partsTemplate.Execute(writer, parts)
 }
 
-func editPartHandler( writer http.ResponseWriter, request *http.Request ) {
-	examplePartData := PartData {
-	    Brand : "Shimano",
-	    Model : "FD-A070",
-	    Description : "black, max tooth 50",
-	    Count : 1,
-	    Price : 4000,
-	    Image : "",
-	    InternalId : 1,
+func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
+	var id = request.URL.Query().Get("id")
+	fmt.Println("url values : ", request.URL.Query().Get("id"))
+	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		tempPartData, err := fromQueryResult( rows )
+		if err != nil {
+		} else {
+			// TODO: get ID from URL
+			// if empty then all fields shall be empty and a STORE operation is to be performed
+			// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
+			//	in this case an update need to be performed
+			edit_partTemplate.Execute(writer, tempPartData)
+		}
 	}
-	// TODO: get ID from URL
-	// if empty then all fields shall be empty and a STORE operation is to be performed
-	// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
-	//	in this case an update need to be performed
-	edit_partTemplate.Execute(writer, examplePartData)
 }
