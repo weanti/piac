@@ -3,7 +3,8 @@ package main
 import ( "net/http"
 	"database/sql"
 	"errors"
-	"fmt")
+	"fmt"
+	"strconv" )
 
 type PartData struct {
     Brand string
@@ -92,8 +93,52 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql
 	var id = request.URL.Query().Get("id")
 	var tempPartData PartData
 	if id == "" {
+		// can be a completely new item or a filled new item
+		// let's examine other params
 		fmt.Println("new item")
-		tempPartData = PartData{}
+		var brand = request.URL.Query().Get("brand")
+		var model = request.URL.Query().Get("model")
+		var description = request.URL.Query().Get("description")
+		var count = request.URL.Query().Get("count")
+		var price = request.URL.Query().Get("price")
+		var image = request.URL.Query().Get("image")
+		if brand != "" {
+			// save mode
+			_, err := db.Query(`INSERT INTO Parts(
+											Brand,
+											Model,
+											Description,
+											Count,
+											Price,
+											Image )
+									VALUES ('` + brand + `','` +
+												model + `','` +
+												description + `',` +
+												count + `,` +
+												price + `,'` +
+												image + `');` )
+			if err != nil {
+				fmt.Println(err)
+			}
+			var n int64
+			var c int16
+			n, err = strconv.ParseInt( count, 10, 16 )
+			if err != nil {
+				c = 0
+			} else {
+				c = int16(n)
+			}
+			var p int32
+			n, err = strconv.ParseInt( price, 10, 32 )
+			if err != nil {
+				p = 0
+			} else {
+				p = int32(n)
+			}
+			tempPartData = PartData{ brand, model, description, c, p, image, 0 }
+		} else {
+			tempPartData = PartData{}
+		}
 	} else {
 		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
 		if err != nil {
@@ -110,4 +155,7 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql
 		}
 	}
 	edit_partTemplate.Execute(writer, tempPartData)
+}
+
+func savePart() {
 }
