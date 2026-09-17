@@ -67,7 +67,7 @@ func fromQueryResult( rows *sql.Rows ) (PartData, error) {
 		}
 		return tempPartData, nil
 	}
-	return PartData{}, errors.New( "No data available in query." )
+	return tempPartData, errors.New( "No data available in query." )
 }
 
 func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
