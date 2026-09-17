@@ -40,7 +40,7 @@ func main() {
 	defer db.Close()
 	_, err = os.Stat( dbFile )
 	if os.IsNotExist(err) {
-		fmt.Println("Creating new database")
+		fmt.Println("Creating new database.")
 		err := createDatabaseTables( db )
 		if err != nil {
 			fmt.Println("Failed to create database: ", err)
@@ -49,14 +49,6 @@ func main() {
 		// create file
 	} else {
 		fmt.Println("Opening existing database.")
-		_, err = db.Query("INSERT INTO Parts ( Brand, Model, Count, Price ) VALUES ('Shimano', 'A070',1,4000);")
-		if err != nil {
-			fmt.Println(err)
-		}
-		_, err = db.Query("INSERT INTO Configurations ( Name, Description, Price ) VALUES ('Csepel Rapid', NULL, 160000)")
-		if err != nil {
-			fmt.Println(err)
-		}
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
