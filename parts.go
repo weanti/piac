@@ -66,9 +66,8 @@ func fromQueryResult( rows *sql.Rows ) (PartData, error) {
 			tempPartData.InternalId = *internalId
 		}
 		return tempPartData, nil
-	} else {
-		return PartData{}, errors.New( "no data available" )
 	}
+	return PartData{}, errors.New( "No data available in query." )
 }
 
 func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
@@ -77,12 +76,11 @@ func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB
 	if err != nil {
 		fmt.Println( err )
 	} else {
-		for {
+		err = nil
+		for err == nil {
 			tempPartData, err := fromQueryResult( rows )
 			if err == nil {
 				parts = append( parts, tempPartData )
-			} else {
-				break
 			}
 		}
 	}
@@ -91,17 +89,17 @@ func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB
 
 func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
-	var tempPartData PartData
+	tempPartData := PartData{}
 	if id == "" {
-		// can be a completely new item or a filled new item
+		// can be a completely new item or an unsaved item
 		// let's examine other params
-		fmt.Println("new item")
 		var brand = request.URL.Query().Get("brand")
 		var model = request.URL.Query().Get("model")
 		var description = request.URL.Query().Get("description")
 		var count = request.URL.Query().Get("count")
 		var price = request.URL.Query().Get("price")
 		var image = request.URL.Query().Get("image")
+		// let brand be the reference, if it's filled then the item shall be saved
 		if brand != "" {
 			// save mode
 			_, err := db.Query(`INSERT INTO Parts(
@@ -136,26 +134,18 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql
 				p = int32(n)
 			}
 			tempPartData = PartData{ brand, model, description, c, p, image, 0 }
-		} else {
-			tempPartData = PartData{}
-		}
+		} 
 	} else {
 		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
-		if err != nil {
-			fmt.Println(err)
-		} else {
+		if err == nil {
 			tempPartData, err = fromQueryResult( rows )
 			if err != nil {
-			} else {
-				// TODO: get ID from URL
-				// if empty then all fields shall be empty and a STORE operation is to be performed
-				// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
-				//	in this case an update need to be performed
+				fmt.Println(err)
 			}
+		} else {
+			fmt.Println(err)
 		}
 	}
 	edit_partTemplate.Execute(writer, tempPartData)
 }
 
-func savePart() {
-}
