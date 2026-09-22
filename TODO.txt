@@ -1,5 +1,4 @@
 parts:
-- parts page: add "add part" button
 - part table: add image binary data OOOR just save a reference and store images in a folder? => with the latter maybe we can restrict which folders can the user use! securitywise this sounds good
 - parts page: display image
 
@@ -8,3 +7,11 @@ configurations:
 - edit configuration page: split view: current configuration | list of parts
 - edit configuration page: mark free parts with green, mark shared parts with yellow
 - how to store list of parts in configurations table?
+
+add "go back button" everywhere:
+left side shall be a frame with the menu structure
+* main
+* parts
+* add part
+* configurations
+* add configuration
