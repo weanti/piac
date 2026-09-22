@@ -78,7 +78,8 @@ func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB
 	} else {
 		err = nil
 		for err == nil {
-			tempPartData, err := fromQueryResult( rows )
+			var tempPartData PartData
+			tempPartData, err = fromQueryResult( rows )
 			if err == nil {
 				parts = append( parts, tempPartData )
 			}
