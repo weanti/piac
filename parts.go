@@ -23,7 +23,7 @@ func createPartsTable(db *sql.DB) error {
 						Description TEXT DEFAULT(''),
 						Count INTEGER DEFAULT(1),
 						Price INTEGER DEFAULT(0),
-						Image BLOB);` )
+						Image TEXT);` )
 	return err
 }
 

@@ -10,7 +10,7 @@
     <table border="1" title="Parts">
 	<tr><td>Brand</td><td>Model</td><td>Description</td><td>Count</td><td>Price</td><td>Image</td><td><!-- edit --></td></tr>
 	{{range .}}
-	<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td>{{.Description}}</td><td>{{.Count}}</td><td>{{.Price}}</td><td>{{.Image}}</td><td><a href="edit_part.html?id={{.InternalId}}">Edit</a></td></tr>
+	<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td>{{.Description}}</td><td>{{.Count}}</td><td>{{.Price}}</td><td><img src="/images/{{.Image}}"></td><td><a href="edit_part.html?id={{.InternalId}}">Edit</a></td></tr>
 	{{end}}
     </table>
     <a href="edit_part.html?id=">Add part</a>
