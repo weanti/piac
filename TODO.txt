@@ -1,6 +1,3 @@
-parts:
-- part table: add image binary data OOOR just save a reference and store images in a folder? => with the latter maybe we can restrict which folders can the user use! securitywise this sounds good
-- parts page: display image
 
 configurations:
 - configurations page: add "add configuration" button
