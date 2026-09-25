@@ -1,7 +1,8 @@
 
 configurations:
 - configurations page: add "add configuration" button
-- edit configuration page: split view: current configuration | list of parts
+- edit configuration page: split view: current configuration | list of parts . TODO: how to do it without code duplication?
+    - parts display: brand, model 
 - edit configuration page: mark free parts with green, mark shared parts with yellow
 - how to store list of parts in configurations table?
 
