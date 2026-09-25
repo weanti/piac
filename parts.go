@@ -1,19 +1,21 @@
 package main
 
-import ( "net/http"
+import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"strconv" )
+	"net/http"
+	"strconv"
+)
 
 type PartData struct {
-    Brand string
-    Model string
-    Description string
-    Count int16
-    Price int32
-    Image string
-    InternalId int32
+	Brand       string
+	Model       string
+	Description string
+	Count       int16
+	Price       int32
+	Image       string
+	InternalId  int32
 }
 
 func createPartsTable(db *sql.DB) error {
@@ -23,26 +25,26 @@ func createPartsTable(db *sql.DB) error {
 						Description TEXT DEFAULT(''),
 						Count INTEGER DEFAULT(1),
 						Price INTEGER DEFAULT(0),
-						Image TEXT);` )
+						Image TEXT);`)
 	return err
 }
 
-func fromQueryResult( rows *sql.Rows ) (PartData, error) {
-	var tempPartData PartData 
+func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
+	var tempPartData PartData
 	var brand, model, description, image *string
 	var count *int16
 	var price, internalId *int32
 	if rows.Next() {
 		err := rows.Scan(&internalId,
-						&brand,
-						&model,
-						&description,
-						&count,
-						&price,
-						&image)
+			&brand,
+			&model,
+			&description,
+			&count,
+			&price,
+			&image)
 		if err != nil {
-			fmt.Println( err )
-			return PartData{}, err 
+			fmt.Println(err)
+			return PartData{}, err
 		}
 		if brand != nil {
 			tempPartData.Brand = *brand
@@ -67,28 +69,28 @@ func fromQueryResult( rows *sql.Rows ) (PartData, error) {
 		}
 		return tempPartData, nil
 	}
-	return tempPartData, errors.New( "No data available in query." )
+	return tempPartData, errors.New("No data available in query.")
 }
 
-func partsHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var parts []PartData
-	rows, err := db.Query( `SELECT rowid,* from Parts;` )
+	rows, err := db.Query(`SELECT rowid,* from Parts;`)
 	if err != nil {
-		fmt.Println( err )
+		fmt.Println(err)
 	} else {
 		err = nil
 		for err == nil {
 			var tempPartData PartData
-			tempPartData, err = fromQueryResult( rows )
+			tempPartData, err = sqlRowToPartData(rows)
 			if err == nil {
-				parts = append( parts, tempPartData )
+				parts = append(parts, tempPartData)
 			}
 		}
 	}
 	partsTemplate.Execute(writer, parts)
 }
 
-func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
+func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
 	tempPartData := PartData{}
 	if id == "" {
@@ -111,35 +113,35 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql
 											Price,
 											Image )
 									VALUES ('` + brand + `','` +
-												model + `','` +
-												description + `',` +
-												count + `,` +
-												price + `,'` +
-												image + `');` )
+				model + `','` +
+				description + `',` +
+				count + `,` +
+				price + `,'` +
+				image + `');`)
 			if err != nil {
 				fmt.Println(err)
 			}
 			var n int64
 			var c int16
-			n, err = strconv.ParseInt( count, 10, 16 )
+			n, err = strconv.ParseInt(count, 10, 16)
 			if err != nil {
 				c = 0
 			} else {
 				c = int16(n)
 			}
 			var p int32
-			n, err = strconv.ParseInt( price, 10, 32 )
+			n, err = strconv.ParseInt(price, 10, 32)
 			if err != nil {
 				p = 0
 			} else {
 				p = int32(n)
 			}
-			tempPartData = PartData{ brand, model, description, c, p, image, 0 }
-		} 
+			tempPartData = PartData{brand, model, description, c, p, image, 0}
+		}
 	} else {
-		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id )
+		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
 		if err == nil {
-			tempPartData, err = fromQueryResult( rows )
+			tempPartData, err = sqlRowToPartData(rows)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -149,4 +151,3 @@ func editPartHandler( writer http.ResponseWriter, request *http.Request, db *sql
 	}
 	edit_partTemplate.Execute(writer, tempPartData)
 }
-
