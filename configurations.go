@@ -25,14 +25,12 @@ func createConfigurationsTable( db *sql.DB ) error {
 	return err
 }
 
-func configurationHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
-	var configurations []ConfigurationData
-	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
-	for rows.Next() {
-		var tempConfigurationData ConfigurationData
-		var name, description, additionalPriceDesc *string
-		var price, additionalPrice, internalId *int32
-		// TODO: array of Parts internal IDs
+func fromQueryResult( rows *sql.Rows ) (ConfigurationData, error) {
+	var tempConfigurationData ConfigurationData
+	var name, description, additionalPriceDesc *string
+	var price, additionalPrice, internalId *int32
+	if rows.Next() {
+	// TODO: array of Parts internal IDs
 		err = rows.Scan(&internalId,
 						&name,
 						&description,
@@ -60,6 +58,19 @@ func configurationHandler( writer http.ResponseWriter, request *http.Request, db
 			if internalId != nil {
 				tempConfigurationData.InternalId = *internalId
 			}
+			return tempConfigurationData, nil
+		}
+	}
+	return tempConfigurationData, errors.New("No data available in query.")
+}
+
+func configurationHandler( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
+	var configurations []ConfigurationData
+	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
+	for rows.Next() {
+		var tempConfigurationData ConfigurationData
+		tempConfigurationData, err = fromQueryResult( rows )
+		if err == nil {
 			configurations = append( configurations, tempConfigurationData )
 		}
 	}
