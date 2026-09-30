@@ -56,5 +56,6 @@ func main() {
 	http.HandleFunc("/templates/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_part.html", func( w http.ResponseWriter, r *http.Request) { editPartHandler(w, r, db) } )
 	http.HandleFunc("/templates/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
+	http.HandleFunc("/templates/edit_configuration.html", func(w http.ResponseWriter, r *http.Request) { editConfigurationHandler(w, r, db) } )
 	http.ListenAndServe(":8080", nil)
 }

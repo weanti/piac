@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Configuration</title>
+    <title>Edit Configuration</title>
 </head>
 <body>
-    <h1>Configuration</h1>
+    <h1>Edit Configuration</h1>
 
-    <form>
+    <form action="edit_configuration.html">
     <label for="name">Name</label><input type="text" id="name" name="name" value="{{.Name}}"><br>
     <label for="description">Description</label><input type="text" id="description" name="description" value="{{.Description}}"><br>
     <!-- parts -->
@@ -14,6 +14,7 @@
     <label for="additional_price">Additional price</label><input type="text" id="additional_price" name="additional_price" value="{{.AdditionalPrice}}"><br>
     <label for="additional_price_desc">Additional price description</label><input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.AdditionalPriceDesc}}"><br>
     <input type="submit" value="Save">
+    <iframe src="parts.html" title="Parts"></iframe>
     </form>
 </body>
 </html>
