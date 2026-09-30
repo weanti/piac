@@ -113,11 +113,11 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 											Price,
 											Image )
 									VALUES ('` + brand + `','` +
-				model + `','` +
-				description + `',` +
-				count + `,` +
-				price + `,'` +
-				image + `');`)
+												model + `','` +
+												description + `',` +
+												count + `,` +
+												price + `,'` +
+												image + `');`)
 			if err != nil {
 				fmt.Println(err)
 			}
