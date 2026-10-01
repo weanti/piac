@@ -30,7 +30,7 @@ func createPartsTable(db *sql.DB) error {
 }
 
 func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
-	var tempPartData PartData
+	var partData PartData
 	var brand, model, description, image *string
 	var count *int16
 	var price, internalId *int32
@@ -47,107 +47,118 @@ func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 			return PartData{}, err
 		}
 		if brand != nil {
-			tempPartData.Brand = *brand
+			partData.Brand = *brand
 		}
 		if model != nil {
-			tempPartData.Model = *model
+			partData.Model = *model
 		}
 		if description != nil {
-			tempPartData.Description = *description
+			partData.Description = *description
 		}
 		if count != nil {
-			tempPartData.Count = *count
+			partData.Count = *count
 		}
 		if price != nil {
-			tempPartData.Price = *price
+			partData.Price = *price
 		}
 		if image != nil {
-			tempPartData.Image = *image
+			partData.Image = *image
 		}
 		if internalId != nil {
-			tempPartData.InternalId = *internalId
+			partData.InternalId = *internalId
 		}
-		return tempPartData, nil
+		return partData, nil
 	}
-	return tempPartData, errors.New("No data available in query.")
+	return partData, errors.New("No data available in query.")
 }
 
 func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	parts := getParts(db)
+	partsTemplate.Execute(writer, parts)
+}
+
+func getParts(db *sql.DB) []PartData {
 	var parts []PartData
 	rows, err := db.Query(`SELECT rowid,* from Parts;`)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		err = nil
+	if err == nil {
 		for err == nil {
-			var tempPartData PartData
-			tempPartData, err = sqlRowToPartData(rows)
+			var partData PartData
+			partData, err = sqlRowToPartData(rows)
 			if err == nil {
-				parts = append(parts, tempPartData)
+				parts = append(parts, partData)
 			}
 		}
+	} else {
+		fmt.Println(err)
 	}
-	partsTemplate.Execute(writer, parts)
+	return parts
+}
+
+func getPart(db *sql.DB, id string) PartData {
+	var partData PartData
+	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
+	if err == nil {
+		partData, err = sqlRowToPartData(rows)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return partData
+}
+
+func insertNewPart( request *http.Request, db *sql.DB ) PartData {
+	var brand = request.URL.Query().Get("brand")
+	var model = request.URL.Query().Get("model")
+	var description = request.URL.Query().Get("description")
+	var count = request.URL.Query().Get("count")
+	var price = request.URL.Query().Get("price")
+	var image = request.URL.Query().Get("image")
+	_, err := db.Query(`INSERT INTO Parts(
+									Brand,
+									Model,
+									Description,
+									Count,
+									Price,
+									Image )
+							VALUES ('` + brand + `','` +
+										model + `','` +
+										description + `',` +
+										count + `,` +
+										price + `,'` +
+										image + `');`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var n int64
+	var c int16
+	n, err = strconv.ParseInt(count, 10, 16)
+	if err != nil {
+		c = 0
+	} else {
+		c = int16(n)
+	}
+	var p int32
+	n, err = strconv.ParseInt(price, 10, 32)
+	if err != nil {
+		p = 0
+	} else {
+		p = int32(n)
+	}
+	return  PartData{brand, model, description, c, p, image, 0}
 }
 
 func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
-	tempPartData := PartData{}
+	var partData PartData
 	if id == "" {
-		// can be a completely new item or an unsaved item
-		// let's examine other params
 		var brand = request.URL.Query().Get("brand")
-		var model = request.URL.Query().Get("model")
-		var description = request.URL.Query().Get("description")
-		var count = request.URL.Query().Get("count")
-		var price = request.URL.Query().Get("price")
-		var image = request.URL.Query().Get("image")
 		// let brand be the reference, if it's filled then the item shall be saved
 		if brand != "" {
-			// save mode
-			_, err := db.Query(`INSERT INTO Parts(
-											Brand,
-											Model,
-											Description,
-											Count,
-											Price,
-											Image )
-									VALUES ('` + brand + `','` +
-												model + `','` +
-												description + `',` +
-												count + `,` +
-												price + `,'` +
-												image + `');`)
-			if err != nil {
-				fmt.Println(err)
-			}
-			var n int64
-			var c int16
-			n, err = strconv.ParseInt(count, 10, 16)
-			if err != nil {
-				c = 0
-			} else {
-				c = int16(n)
-			}
-			var p int32
-			n, err = strconv.ParseInt(price, 10, 32)
-			if err != nil {
-				p = 0
-			} else {
-				p = int32(n)
-			}
-			tempPartData = PartData{brand, model, description, c, p, image, 0}
-		}
+			partData = insertNewPart( request, db )
+		} // else it's a completely empty entry, nothing to do
 	} else {
-		rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
-		if err == nil {
-			tempPartData, err = sqlRowToPartData(rows)
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			fmt.Println(err)
-		}
+		partData = getPart( db, id )
+		// TODO: update data
 	}
-	edit_partTemplate.Execute(writer, tempPartData)
+	edit_partTemplate.Execute(writer, partData)
 }

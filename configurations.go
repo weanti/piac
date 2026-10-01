@@ -30,7 +30,7 @@ func createConfigurationsTable(db *sql.DB) error {
 }
 
 func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
-	var tempConfigurationData ConfigurationData
+	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc *string
 	var price, additionalPrice, internalId *int32
 	if rows.Next() {
@@ -45,95 +45,105 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 			fmt.Println(err)
 		} else {
 			if name != nil {
-				tempConfigurationData.Name = *name
+				configurationData.Name = *name
 			}
 			if description != nil {
-				tempConfigurationData.Description = *description
+				configurationData.Description = *description
 			}
 			if additionalPriceDesc != nil {
-				tempConfigurationData.AdditionalPriceDesc = *additionalPriceDesc
+				configurationData.AdditionalPriceDesc = *additionalPriceDesc
 			}
 			if price != nil {
-				tempConfigurationData.Price = *price
+				configurationData.Price = *price
 			}
 			if additionalPrice != nil {
-				tempConfigurationData.AdditionalPrice = *additionalPrice
+				configurationData.AdditionalPrice = *additionalPrice
 			}
 			if internalId != nil {
-				tempConfigurationData.InternalId = *internalId
+				configurationData.InternalId = *internalId
 			}
-			return tempConfigurationData, nil
+			return configurationData, nil
 		}
 	}
-	return tempConfigurationData, errors.New("No data available in query.")
+	return configurationData, errors.New("No data available in query.")
 }
 
-func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+func getConfigurations( db *sql.DB) []ConfigurationData {
 	var configurations []ConfigurationData
 	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
 	for rows.Next() {
-		var tempConfigurationData ConfigurationData
-		tempConfigurationData, err = sqlRowToConfigurationData(rows)
+		var configurationData ConfigurationData
+		configurationData, err = sqlRowToConfigurationData(rows)
 		if err == nil {
-			configurations = append(configurations, tempConfigurationData)
+			configurations = append(configurations, configurationData)
 		}
 	}
+	return configurations
+}
+
+func getConfiguration( db *sql.DB, id string ) ConfigurationData {
+	rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
+	var configurationData ConfigurationData
+	if err == nil {
+		configurationData, err = sqlRowToConfigurationData(rows)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return configurationData
+}
+
+func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
+	var name = request.URL.Query().Get("name")
+	var description = request.URL.Query().Get("description")
+	var price = request.URL.Query().Get("price")
+	var additionalPrice = request.URL.Query().Get("additionalPrice")
+	var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
+	_, err := db.Query( `INSERT INTO Configurations(
+										Name,
+										Description,
+										Price,
+										AdditionalPrice,
+										AdditionalPriceDesc )
+								VALUES('` + name + `','` +
+											description + `','` +	
+											price + `','` +
+											additionalPrice + `','` +
+											additionalPriceDescription + `');'`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	var n int64
+	var p int32
+	n, err = strconv.ParseInt( price, 10, 32 )
+	if err != nil {
+		p = int32(n)
+	}
+	var a int32
+	n, err = strconv.ParseInt( additionalPrice, 10, 32 )
+	if err != nil {
+		a = int32(n)
+	}
+	return ConfigurationData{name, description, p, a, additionalPriceDescription, nil, 0 }
+}
+
+func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	configurations := getConfigurations( db )
 	configurationTemplate.Execute(writer, configurations)
-	// TODO: get ID from URL
-	// if empty then all fields shall be empty and a STORE operation is to be performed
-	// if not empty then query all fields (is this redundant? maybe recevie everything from query?)
-	//	in this case an update need to be performed
 }
 
 func editConfigurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	
-	fmt.Println("edit config")
 	var id = request.URL.Query().Get("id")
-	tempConfigurationData := ConfigurationData{}
+	var configurationData ConfigurationData
 	if id == "" {
 		var name = request.URL.Query().Get("name")
-		var description = request.URL.Query().Get("description")
-		var price = request.URL.Query().Get("price")
-		var additionalPrice = request.URL.Query().Get("additionalPrice")
-		var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
 		if name != "" {
-			_, err := db.Query( `INSERT INTO Configurations(
-												Name,
-												Description,
-												Price,
-												AdditionalPrice,
-												AdditionalPriceDesc )
-											VALUES('` + name + `','` +
-														description + `','` +	
-														price + `','` +
-														additionalPrice + `','` +
-														additionalPriceDescription + `');'`)
-			if err != nil {
-				fmt.Println(err)
-			}
-			var n int64
-			var p int32
-			n, err = strconv.ParseInt( price, 10, 32 )
-			if err != nil {
-				p = int32(n)
-			}
-			var a int32
-			n, err = strconv.ParseInt( additionalPrice, 10, 32 )
-			if err != nil {
-				a = int32(n)
-			}
-			tempConfigurationData = ConfigurationData{name, description, p, a, additionalPriceDescription, nil, 0 }
-		}
+			configurationData = insertNewConfiguration( request, db )
+		} // else it's a completely new empty entry, nothing to do
 	} else {
-		rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
-		if err == nil {
-			tempConfigurationData, err = sqlRowToConfigurationData(rows)
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			fmt.Println(err)
-		}
+		configurationData = getConfiguration( db, id )
+		// TODO: update data
 	}
-	edit_configurationTemplate.Execute( writer, tempConfigurationData )
+	// TODO: display parts := getParts( db )
+	edit_configurationTemplate.Execute( writer, configurationData )
 }
