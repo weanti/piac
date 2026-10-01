@@ -19,13 +19,14 @@ type PartData struct {
 }
 
 func createPartsTable(db *sql.DB) error {
-	_, err := db.Query(`CREATE TABLE Parts(
+	rows, err := db.Query(`CREATE TABLE Parts(
 						Brand TEXT NOT NULL,
 						Model TEXT NOT NULL, 
 						Description TEXT DEFAULT(''),
 						Count INTEGER DEFAULT(1),
 						Price INTEGER DEFAULT(0),
 						Image TEXT);`)
+	defer rows.Close()
 	return err
 }
 
@@ -80,6 +81,7 @@ func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB)
 func getParts(db *sql.DB) []PartData {
 	var parts []PartData
 	rows, err := db.Query(`SELECT rowid,* from Parts;`)
+	defer rows.Close()
 	if err == nil {
 		for err == nil {
 			var partData PartData
@@ -97,6 +99,7 @@ func getParts(db *sql.DB) []PartData {
 func getPart(db *sql.DB, id string) PartData {
 	var partData PartData
 	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
+	defer rows.Close()
 	if err == nil {
 		partData, err = sqlRowToPartData(rows)
 	}
@@ -106,31 +109,29 @@ func getPart(db *sql.DB, id string) PartData {
 	return partData
 }
 
-func insertNewPart( request *http.Request, db *sql.DB ) PartData {
+func updatePart(db *sql.DB, id string, part PartData) error {
+	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = (` +
+											part.Brand + `','` +
+											part.Model + `','` +
+											part.Description + `','` +
+											strconv.Itoa( int(part.Count) ) + `','` +
+											strconv.Itoa( int(part.Price) ) + `','` +
+											part.Image +
+										`WHERE id = ` + id + `);` )
+	defer rows.Close()
+	return err
+}
+
+func getPartDataFromRequest( request *http.Request ) PartData {
 	var brand = request.URL.Query().Get("brand")
 	var model = request.URL.Query().Get("model")
 	var description = request.URL.Query().Get("description")
 	var count = request.URL.Query().Get("count")
 	var price = request.URL.Query().Get("price")
 	var image = request.URL.Query().Get("image")
-	_, err := db.Query(`INSERT INTO Parts(
-									Brand,
-									Model,
-									Description,
-									Count,
-									Price,
-									Image )
-							VALUES ('` + brand + `','` +
-										model + `','` +
-										description + `',` +
-										count + `,` +
-										price + `,'` +
-										image + `');`)
-	if err != nil {
-		fmt.Println(err)
-	}
 	var n int64
 	var c int16
+	var err error
 	n, err = strconv.ParseInt(count, 10, 16)
 	if err != nil {
 		c = 0
@@ -147,6 +148,28 @@ func insertNewPart( request *http.Request, db *sql.DB ) PartData {
 	return  PartData{brand, model, description, c, p, image, 0}
 }
 
+func insertNewPart( request *http.Request, db *sql.DB ) PartData {
+	partData := getPartDataFromRequest( request )
+	rows, err := db.Query(`INSERT INTO Parts (
+									Brand,
+									Model,
+									Description,
+									Count,
+									Price,
+									Image )
+							VALUES ('` + partData.Brand + `','` +
+										partData.Model + `','` +
+										partData.Description + `',` +
+										strconv.Itoa( int(partData.Count) ) + `,` +
+										strconv.Itoa( int(partData.Price) ) + `,'` +
+										partData.Image + `');`)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return partData
+}
+
 func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
 	var partData PartData
@@ -157,7 +180,15 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 			partData = insertNewPart( request, db )
 		} // else it's a completely empty entry, nothing to do
 	} else {
+		// load existing data
 		partData = getPart( db, id )
+		// if request contains data then it is modified
+		partData2 := getPartDataFromRequest( request )
+		if partData2.Model != "" {
+			updatePart( db, id, partData2 )
+		}
+		// if request contains other info then update stored data
+//		
 		// TODO: update data
 	}
 	edit_partTemplate.Execute(writer, partData)

@@ -19,12 +19,13 @@ type ConfigurationData struct {
 }
 
 func createConfigurationsTable(db *sql.DB) error {
-	_, err := db.Query(`CREATE TABLE Configurations(
+	rows, err := db.Query(`CREATE TABLE Configurations(
 						Name TEXT NOT NULL,
 						Description TEXT DEFAULT(''),
 						Price INTEGER DEFAULT(0),
 						AdditionalPrice INTEGER DEFAULT(0),
 						AdditionalPriceDesc TEXT DEFAULT(''));`)
+	defer rows.Close()
 	// TODO: somehow store the references here
 	return err
 }
@@ -71,6 +72,7 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 func getConfigurations( db *sql.DB) []ConfigurationData {
 	var configurations []ConfigurationData
 	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
+	defer rows.Close()
 	for rows.Next() {
 		var configurationData ConfigurationData
 		configurationData, err = sqlRowToConfigurationData(rows)
@@ -83,6 +85,7 @@ func getConfigurations( db *sql.DB) []ConfigurationData {
 
 func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
+	defer rows.Close()
 	var configurationData ConfigurationData
 	if err == nil {
 		configurationData, err = sqlRowToConfigurationData(rows)
@@ -99,7 +102,7 @@ func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationDa
 	var price = request.URL.Query().Get("price")
 	var additionalPrice = request.URL.Query().Get("additionalPrice")
 	var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
-	_, err := db.Query( `INSERT INTO Configurations(
+	rows, err := db.Query( `INSERT INTO Configurations(
 										Name,
 										Description,
 										Price,
@@ -110,6 +113,7 @@ func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationDa
 											price + `','` +
 											additionalPrice + `','` +
 											additionalPriceDescription + `');'`)
+	defer rows.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
