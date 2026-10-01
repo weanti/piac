@@ -13,8 +13,15 @@
     <label for="price">Price</label><input type="text" id="price" name="price" value="{{.Price}}"><br>
     <label for="additional_price">Additional price</label><input type="text" id="additional_price" name="additional_price" value="{{.AdditionalPrice}}"><br>
     <label for="additional_price_desc">Additional price description</label><input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.AdditionalPriceDesc}}"><br>
+
+    <table border="1" title="Parts">
+	<tr><td>Brand</td><td>Model</td></tr>
+	{{range .}}
+	<tr><td>CHECKBOX COMES HERE</td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+	{{end}}
+    </table>
+
     <input type="submit" value="Save">
-    <iframe src="parts.html" title="Parts"></iframe>
     </form>
 </body>
 </html>
