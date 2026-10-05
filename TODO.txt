@@ -1,10 +1,7 @@
 
 configurations:
 - configurations page: add "add configuration" button
-- edit configuration page: split view: current configuration | list of parts . TODO: how to do it without code duplication?
-    - parts display: brand, model. copy of parts.html parts.go/partsHandler should worh automatically? 
 - edit configuration page: mark free parts with green, mark shared parts with yellow
-- how to store list of parts in configurations table?
 
 add "go back button" everywhere:
 left side shall be a frame with the menu structure
