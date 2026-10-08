@@ -110,14 +110,14 @@ func getPart(db *sql.DB, id string) PartData {
 }
 
 func updatePart(db *sql.DB, id string, part PartData) error {
-	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = (` +
+	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = ('` +
 											part.Brand + `','` +
 											part.Model + `','` +
 											part.Description + `','` +
 											strconv.Itoa( int(part.Count) ) + `','` +
 											strconv.Itoa( int(part.Price) ) + `','` +
-											part.Image +
-										`WHERE id = ` + id + `);` )
+											part.Image + `' )` +
+										` WHERE rowid = ` + id + `;` )
 	defer rows.Close()
 	return err
 }
@@ -187,9 +187,6 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 		if partData2.Model != "" {
 			updatePart( db, id, partData2 )
 		}
-		// if request contains other info then update stored data
-//		
-		// TODO: update data
 	}
 	edit_partTemplate.Execute(writer, partData)
 }
