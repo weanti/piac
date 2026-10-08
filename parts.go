@@ -109,7 +109,7 @@ func getPart(db *sql.DB, id string) PartData {
 	return partData
 }
 
-func updatePart(db *sql.DB, id string, part PartData) error {
+func updatePart(db *sql.DB, part PartData) error {
 	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = ('` +
 											part.Brand + `','` +
 											part.Model + `','` +
@@ -117,7 +117,7 @@ func updatePart(db *sql.DB, id string, part PartData) error {
 											strconv.Itoa( int(part.Count) ) + `','` +
 											strconv.Itoa( int(part.Price) ) + `','` +
 											part.Image + `' )` +
-										` WHERE rowid = ` + id + `;` )
+										` WHERE rowid = ` + strconv.Itoa( int(part.InternalId) ) + `;` )
 	defer rows.Close()
 	return err
 }
@@ -129,23 +129,25 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 	var count = request.URL.Query().Get("count")
 	var price = request.URL.Query().Get("price")
 	var image = request.URL.Query().Get("image")
+	var internalId = request.URL.Query().Get("id")
 	var n int64
-	var c int16
+	var c int16 = 0
 	var err error
 	n, err = strconv.ParseInt(count, 10, 16)
-	if err != nil {
-		c = 0
-	} else {
+	if err == nil {
 		c = int16(n)
 	}
-	var p int32
+	var p int32 = 0
 	n, err = strconv.ParseInt(price, 10, 32)
-	if err != nil {
-		p = 0
-	} else {
+	if err == nil {
 		p = int32(n)
 	}
-	return  PartData{brand, model, description, c, p, image, 0}
+	var i int32 = 0
+	n, err = strconv.ParseInt(internalId, 10, 32)
+	if err == nil {
+		i = int32(n)
+	}
+	return  PartData{brand, model, description, c, p, image, i}
 }
 
 func insertNewPart( request *http.Request, db *sql.DB ) PartData {
@@ -183,9 +185,10 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 		// load existing data
 		partData = getPart( db, id )
 		// if request contains data then it is modified
-		partData2 := getPartDataFromRequest( request )
-		if partData2.Model != "" {
-			updatePart( db, id, partData2 )
+		partDataFromRequest := getPartDataFromRequest( request )
+		if partDataFromRequest.Model != "" {
+			updatePart( db, partDataFromRequest )
+			partData = partDataFromRequest
 		}
 	}
 	edit_partTemplate.Execute(writer, partData)
