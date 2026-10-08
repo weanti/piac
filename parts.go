@@ -187,8 +187,12 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 		// if request contains data then it is modified
 		partDataFromRequest := getPartDataFromRequest( request )
 		if partDataFromRequest.Model != "" {
-			updatePart( db, partDataFromRequest )
-			partData = partDataFromRequest
+			err := updatePart( db, partDataFromRequest )
+			if err == nil {
+				partData = partDataFromRequest
+			} else {
+				fmt.Println(err)
+			}
 		}
 	}
 	edit_partTemplate.Execute(writer, partData)
