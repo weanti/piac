@@ -96,13 +96,14 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	return configurationData
 }
 
-func getConfigurationDataFromRequest( request *http.Request ) ConfigurationData {
-	var name = request.URL.Query().Get("name")
-	var description = request.URL.Query().Get("description")
-	var price = request.URL.Query().Get("price")
-	var additionalPrice = request.URL.Query().Get("additionalPrice")
-	var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
-	var id = request.URL.Query().Get("id")
+func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) ConfigurationData {
+	var values = request.URL.Query()
+	var name = values.Get("name")
+	var description = values.Get("description")
+	var price = values.Get("price")
+	var additionalPrice = values.Get("additionalPrice")
+	var additionalPriceDescription = values.Get("additionalPriceDescription")
+	var id = values.Get("id")
 	var n int64
 	var p int32 = 0
 	var err error
@@ -120,11 +121,17 @@ func getConfigurationDataFromRequest( request *http.Request ) ConfigurationData 
 	if err == nil {
 		i = int32(n)
 	}
-	return ConfigurationData{ name, description, p, a, additionalPriceDescription, nil, i }
+	var parts []PartData
+	var partIds = values["part"]
+	for partId := range partIds {
+		parts = append( parts, getPart( db, partIds[partId] ) )
+	}
+
+	return ConfigurationData{ name, description, p, a, additionalPriceDescription, parts, i }
 }
 
 func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
-	configurationData := getConfigurationDataFromRequest( request )
+	configurationData := getConfigurationDataFromRequest( request, db )
 	rows, err := db.Query( `INSERT INTO Configurations(
 										Name,
 										Description,
@@ -171,7 +178,7 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 		} // else it's a completely new empty entry, nothing to do
 	} else {
 		configurationData = getConfiguration( db, id )
-		configurationDataFromRequest := getConfigurationDataFromRequest( request )
+		configurationDataFromRequest := getConfigurationDataFromRequest( request, db )
 		if configurationDataFromRequest.Name != "" {
 			err := updateConfiguration( db, configurationDataFromRequest )
 			if err == nil {
