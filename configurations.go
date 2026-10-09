@@ -15,7 +15,7 @@ type ConfigurationData struct {
 	AdditionalPrice     int32
 	AdditionalPriceDesc string
 	Parts               []PartData
-	InternalId          int32
+	Id          		int32
 }
 
 func createConfigurationsTable(db *sql.DB) error {
@@ -33,10 +33,10 @@ func createConfigurationsTable(db *sql.DB) error {
 func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc *string
-	var price, additionalPrice, internalId *int32
+	var price, additionalPrice, id *int32
 	if rows.Next() {
 		// TODO: array of Parts internal IDs
-		err := rows.Scan(&internalId,
+		err := rows.Scan(&id,
 			&name,
 			&description,
 			&price,
@@ -60,8 +60,8 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 			if additionalPrice != nil {
 				configurationData.AdditionalPrice = *additionalPrice
 			}
-			if internalId != nil {
-				configurationData.InternalId = *internalId
+			if id != nil {
+				configurationData.Id = *id
 			}
 			return configurationData, nil
 		}
@@ -102,7 +102,7 @@ func getConfigurationDataFromRequest( request *http.Request ) ConfigurationData 
 	var price = request.URL.Query().Get("price")
 	var additionalPrice = request.URL.Query().Get("additionalPrice")
 	var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
-	var internalId = request.URL.Query().Get("id")
+	var id = request.URL.Query().Get("id")
 	var n int64
 	var p int32 = 0
 	var err error
@@ -116,7 +116,7 @@ func getConfigurationDataFromRequest( request *http.Request ) ConfigurationData 
 		a = int32(n)
 	}
 	var i int32 = 0
-	n, err = strconv.ParseInt( internalId, 10, 32 )
+	n, err = strconv.ParseInt( id, 10, 32 )
 	if err == nil {
 		i = int32(n)
 	}
@@ -156,7 +156,7 @@ func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
 								strconv.Itoa( int(configuration.Price) ) + `','` +
 								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
 								configuration.AdditionalPriceDesc + `' )` +
-							` WHERE rowid = ` + strconv.Itoa( int(configuration.InternalId) ) + `;` )
+							` WHERE rowid = ` + strconv.Itoa( int(configuration.Id) ) + `;` )
 	defer rows.Close()
 	return err
 }
