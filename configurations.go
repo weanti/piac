@@ -96,44 +96,69 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	return configurationData
 }
 
-func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
+func getConfigurationDataFromRequest( request *http.Request ) ConfigurationData {
 	var name = request.URL.Query().Get("name")
 	var description = request.URL.Query().Get("description")
 	var price = request.URL.Query().Get("price")
 	var additionalPrice = request.URL.Query().Get("additionalPrice")
 	var additionalPriceDescription = request.URL.Query().Get("additionalPriceDescription")
+	var internalId = request.URL.Query().Get("id")
+	var n int64
+	var p int32 = 0
+	var err error
+	n, err = strconv.ParseInt( price, 10, 32 )
+	if err == nil {
+		p = int32(n)
+	}
+	var a int32 = 0
+	n, err = strconv.ParseInt( additionalPrice, 10, 32 )
+	if err == nil {
+		a = int32(n)
+	}
+	var i int32 = 0
+	n, err = strconv.ParseInt( internalId, 10, 32 )
+	if err == nil {
+		i = int32(n)
+	}
+	return ConfigurationData{ name, description, p, a, additionalPriceDescription, nil, i }
+}
+
+func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
+	configurationData := getConfigurationDataFromRequest( request )
 	rows, err := db.Query( `INSERT INTO Configurations(
 										Name,
 										Description,
 										Price,
 										AdditionalPrice,
 										AdditionalPriceDesc )
-								VALUES('` + name + `','` +
-											description + `','` +	
-											price + `','` +
-											additionalPrice + `','` +
-											additionalPriceDescription + `');'`)
+								VALUES('` + configurationData.Name + `','` +
+											configurationData.Description + `','` +	
+											strconv.Itoa( int(configurationData.Price) ) + `','` +
+											strconv.Itoa( int(configurationData.AdditionalPrice) ) + `','` +
+											configurationData.AdditionalPriceDesc + `');'`)
 	defer rows.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
-	var n int64
-	var p int32
-	n, err = strconv.ParseInt( price, 10, 32 )
-	if err != nil {
-		p = int32(n)
-	}
-	var a int32
-	n, err = strconv.ParseInt( additionalPrice, 10, 32 )
-	if err != nil {
-		a = int32(n)
-	}
-	return ConfigurationData{name, description, p, a, additionalPriceDescription, nil, 0 }
+
+	return configurationData
 }
 
 func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	configurations := getConfigurations( db )
 	configurationTemplate.Execute(writer, configurations)
+}
+
+func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
+	rows, err := db.Query(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) = ('` +
+								configuration.Name + `','` +
+								configuration.Description + `','` +
+								strconv.Itoa( int(configuration.Price) ) + `','` +
+								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
+								configuration.AdditionalPriceDesc + `' )` +
+							` WHERE rowid = ` + strconv.Itoa( int(configuration.InternalId) ) + `;` )
+	defer rows.Close()
+	return err
 }
 
 func editConfigurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
@@ -146,8 +171,17 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 		} // else it's a completely new empty entry, nothing to do
 	} else {
 		configurationData = getConfiguration( db, id )
-		// TODO: update data
+		configurationDataFromRequest := getConfigurationDataFromRequest( request )
+		if configurationDataFromRequest.Name != "" {
+			err := updateConfiguration( db, configurationDataFromRequest )
+			if err == nil {
+				configurationData = configurationDataFromRequest
+			} else {
+				fmt.Println(err)
+			}
+		}
 	}
-	// TODO: display parts := getParts( db )
+
+	configurationData.Parts = getParts( db )
 	edit_configurationTemplate.Execute( writer, configurationData )
 }
