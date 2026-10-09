@@ -15,7 +15,7 @@ type PartData struct {
 	Count       int16
 	Price       int32
 	Image       string
-	InternalId  int32
+	Id  		int32
 }
 
 func createPartsTable(db *sql.DB) error {
@@ -34,9 +34,9 @@ func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	var partData PartData
 	var brand, model, description, image *string
 	var count *int16
-	var price, internalId *int32
+	var price, id *int32
 	if rows.Next() {
-		err := rows.Scan(&internalId,
+		err := rows.Scan(&id,
 			&brand,
 			&model,
 			&description,
@@ -65,8 +65,8 @@ func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 		if image != nil {
 			partData.Image = *image
 		}
-		if internalId != nil {
-			partData.InternalId = *internalId
+		if id != nil {
+			partData.Id = *id
 		}
 		return partData, nil
 	}
@@ -117,7 +117,7 @@ func updatePart(db *sql.DB, part PartData) error {
 											strconv.Itoa( int(part.Count) ) + `','` +
 											strconv.Itoa( int(part.Price) ) + `','` +
 											part.Image + `' )` +
-										` WHERE rowid = ` + strconv.Itoa( int(part.InternalId) ) + `;` )
+										` WHERE rowid = ` + strconv.Itoa( int(part.Id) ) + `;` )
 	defer rows.Close()
 	return err
 }
@@ -129,7 +129,7 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 	var count = request.URL.Query().Get("count")
 	var price = request.URL.Query().Get("price")
 	var image = request.URL.Query().Get("image")
-	var internalId = request.URL.Query().Get("id")
+	var id = request.URL.Query().Get("id")
 	var n int64
 	var c int16 = 0
 	var err error
@@ -143,7 +143,7 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 		p = int32(n)
 	}
 	var i int32 = 0
-	n, err = strconv.ParseInt(internalId, 10, 32)
+	n, err = strconv.ParseInt(id, 10, 32)
 	if err == nil {
 		i = int32(n)
 	}
