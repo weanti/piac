@@ -18,6 +18,10 @@ type PartData struct {
 	Id  		string
 }
 
+/****************
+*    Database   *
+*****************/
+// Create Parts database table
 func createPartsTable(db *sql.DB) error {
 	rows, err := db.Query(`CREATE TABLE Parts(
 						Brand TEXT NOT NULL,
@@ -30,6 +34,38 @@ func createPartsTable(db *sql.DB) error {
 	return err
 }
 
+// Get all parts from database
+func getParts(db *sql.DB) []PartData {
+	var parts []PartData
+	rows, err := db.Query(`SELECT rowid,* from Parts;`)
+	defer rows.Close()
+	if err == nil {
+		for err == nil {
+			var partData PartData
+			partData, err = sqlRowToPartData(rows)
+			if err == nil {
+				parts = append(parts, partData)
+			}
+		}
+	} else {
+		fmt.Println(err)
+	}
+	return parts
+}
+// Get specific part from database
+func getPart(db *sql.DB, id string) PartData {
+	var partData PartData
+	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
+	defer rows.Close()
+	if err == nil {
+		partData, err = sqlRowToPartData(rows)
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	return partData
+}
+// Helper function to convert database query result to PartData
 func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	var partData PartData
 	var brand, model, description, image, id *string
@@ -72,44 +108,8 @@ func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	}
 	return partData, errors.New("No data available in query.")
 }
-
-func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	parts := getParts(db)
-	partsTemplate.Execute(writer, parts)
-}
-
-func getParts(db *sql.DB) []PartData {
-	var parts []PartData
-	rows, err := db.Query(`SELECT rowid,* from Parts;`)
-	defer rows.Close()
-	if err == nil {
-		for err == nil {
-			var partData PartData
-			partData, err = sqlRowToPartData(rows)
-			if err == nil {
-				parts = append(parts, partData)
-			}
-		}
-	} else {
-		fmt.Println(err)
-	}
-	return parts
-}
-
-func getPart(db *sql.DB, id string) PartData {
-	var partData PartData
-	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
-	defer rows.Close()
-	if err == nil {
-		partData, err = sqlRowToPartData(rows)
-	}
-	if err != nil {
-		fmt.Println(err)
-	}
-	return partData
-}
-
-func updatePart(db *sql.DB, part PartData) error {
+// Update the part in database. Part is identified by PartData.Id, the rest is the new data.
+func updatePart(part PartData, db *sql.DB) error {
 	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = ('` +
 											part.Brand + `','` +
 											part.Model + `','` +
@@ -121,7 +121,70 @@ func updatePart(db *sql.DB, part PartData) error {
 	defer rows.Close()
 	return err
 }
+// Create new part in database.
+func insertNewPart(partData PartData, db *sql.DB) error {
+	var err error = nil
+	var rows *sql.Rows = nil
+	rows, err = db.Query(`INSERT INTO Parts (
+									Brand,
+									Model,
+									Description,
+									Count,
+									Price,
+									Image )
+							VALUES ('` + partData.Brand + `','` +
+										partData.Model + `','` +
+										partData.Description + `',` +
+										strconv.Itoa( int(partData.Count) ) + `,` +
+										strconv.Itoa( int(partData.Price) ) + `,'` +
+										partData.Image + `');`)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
+}
 
+/****************
+*      HTML     *
+*****************/
+
+// Main function for displaying parts list in parts.html
+func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	parts := getParts(db)
+	partsTemplate.Execute(writer, parts)
+}
+
+// Main function for displaying edited part in edit_part.html
+func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	var id = request.URL.Query().Get("id")
+	var partData PartData
+
+	if id == "" {
+		var brand = request.URL.Query().Get("brand")
+		// let brand be the reference, if it's filled then the item shall be saved
+		if brand != "" {
+			partData := getPartDataFromRequest( request )
+			insertNewPart( partData, db )
+		} // else it's a completely empty entry, nothing to do
+	} else {
+		// load existing data
+		partData = getPart( db, id )
+		// if request contains data then it is modified
+		partDataFromRequest := getPartDataFromRequest( request )
+		if partDataFromRequest.Model != "" {
+			err := updatePart( partDataFromRequest, db )
+			if err == nil {
+				partData = partDataFromRequest
+			} else {
+				fmt.Println(err)
+			}
+		}
+	}
+	edit_partTemplate.Execute(writer, partData)
+}
+
+// Helper function that convert GET method params to PartData
 func getPartDataFromRequest( request *http.Request ) PartData {
 	var brand = request.URL.Query().Get("brand")
 	var model = request.URL.Query().Get("model")
@@ -145,51 +208,3 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 	return  PartData{brand, model, description, c, p, image, id}
 }
 
-func insertNewPart( request *http.Request, db *sql.DB ) PartData {
-	partData := getPartDataFromRequest( request )
-	rows, err := db.Query(`INSERT INTO Parts (
-									Brand,
-									Model,
-									Description,
-									Count,
-									Price,
-									Image )
-							VALUES ('` + partData.Brand + `','` +
-										partData.Model + `','` +
-										partData.Description + `',` +
-										strconv.Itoa( int(partData.Count) ) + `,` +
-										strconv.Itoa( int(partData.Price) ) + `,'` +
-										partData.Image + `');`)
-	defer rows.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-	return partData
-}
-
-func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	var id = request.URL.Query().Get("id")
-	var partData PartData
-
-	if id == "" {
-		var brand = request.URL.Query().Get("brand")
-		// let brand be the reference, if it's filled then the item shall be saved
-		if brand != "" {
-			partData = insertNewPart( request, db )
-		} // else it's a completely empty entry, nothing to do
-	} else {
-		// load existing data
-		partData = getPart( db, id )
-		// if request contains data then it is modified
-		partDataFromRequest := getPartDataFromRequest( request )
-		if partDataFromRequest.Model != "" {
-			err := updatePart( db, partDataFromRequest )
-			if err == nil {
-				partData = partDataFromRequest
-			} else {
-				fmt.Println(err)
-			}
-		}
-	}
-	edit_partTemplate.Execute(writer, partData)
-}
