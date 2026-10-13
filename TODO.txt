@@ -1,6 +1,5 @@
-
+maybe move edit function into separate part?
 configurations:
-- configurations page: add "add configuration" button
 - edit configuration page: mark free parts with green, mark shared parts with yellow
 
 add "go back button" everywhere:
