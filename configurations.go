@@ -17,7 +17,10 @@ type ConfigurationData struct {
 	Parts               []PartData
 	Id          		string
 }
-
+/*****************
+*    Database    *
+******************/
+// Create Configurations database table
 func createConfigurationsTable(db *sql.DB) error {
 	rows, err := db.Query(`CREATE TABLE Configurations(
 						Name TEXT NOT NULL,
@@ -30,6 +33,7 @@ func createConfigurationsTable(db *sql.DB) error {
 	return err
 }
 
+// Helper function to convert database query result to ConfigurationData
 func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
@@ -69,6 +73,7 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	return configurationData, errors.New("No data available in query.")
 }
 
+// Get all configurations from database
 func getConfigurations( db *sql.DB) []ConfigurationData {
 	var configurations []ConfigurationData
 	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
@@ -83,6 +88,7 @@ func getConfigurations( db *sql.DB) []ConfigurationData {
 	return configurations
 }
 
+// Get specific configuration from database
 func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
 	defer rows.Close()
@@ -96,6 +102,46 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	return configurationData
 }
 
+// Create new configuration in database
+func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) error {
+	rows, err := db.Query( `INSERT INTO Configurations(
+										Name,
+										Description,
+										Price,
+										AdditionalPrice,
+										AdditionalPriceDesc )
+								VALUES('` + configurationData.Name + `','` +
+											configurationData.Description + `','` +	
+											strconv.Itoa( int(configurationData.Price) ) + `','` +
+											strconv.Itoa( int(configurationData.AdditionalPrice) ) + `','` +
+											configurationData.AdditionalPriceDesc + `');`)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return err
+}
+
+// Update the configuration in database. Configuration is identified by ConfigurationData.Id, the rest is the new data.
+func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
+	rows, err := db.Query(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) = ('` +
+								configuration.Name + `','` +
+								configuration.Description + `','` +
+								strconv.Itoa( int(configuration.Price) ) + `','` +
+								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
+								configuration.AdditionalPriceDesc + `' )` +
+							` WHERE rowid = ` + configuration.Id + `;` )
+	defer rows.Close()
+	return err
+}
+
+
+/*****************
+*      HTML      *
+******************/
+
+// Helper function that convert GET method params to ConfigurationData
 func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) ConfigurationData {
 	var values = request.URL.Query()
 	var name = values.Get("name")
@@ -126,44 +172,13 @@ func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) Config
 	return ConfigurationData{ name, description, p, a, additionalPriceDescription, parts, id }
 }
 
-func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
-	configurationData := getConfigurationDataFromRequest( request, db )
-	rows, err := db.Query( `INSERT INTO Configurations(
-										Name,
-										Description,
-										Price,
-										AdditionalPrice,
-										AdditionalPriceDesc )
-								VALUES('` + configurationData.Name + `','` +
-											configurationData.Description + `','` +	
-											strconv.Itoa( int(configurationData.Price) ) + `','` +
-											strconv.Itoa( int(configurationData.AdditionalPrice) ) + `','` +
-											configurationData.AdditionalPriceDesc + `');`)
-	defer rows.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return configurationData
-}
-
+// Main function for displaying configurations in configurations.html.
 func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	configurations := getConfigurations( db )
 	configurationTemplate.Execute(writer, configurations)
 }
 
-func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
-	rows, err := db.Query(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) = ('` +
-								configuration.Name + `','` +
-								configuration.Description + `','` +
-								strconv.Itoa( int(configuration.Price) ) + `','` +
-								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
-								configuration.AdditionalPriceDesc + `' )` +
-							` WHERE rowid = ` + configuration.Id + `;` )
-	defer rows.Close()
-	return err
-}
-
+// Main function for displaying edited configuration in edit_configuration.html.
 func editConfigurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
 	var configurationData ConfigurationData
@@ -171,7 +186,8 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	if id == "" {
 		var name = request.URL.Query().Get("name")
 		if name != "" {
-			configurationData = insertNewConfiguration( request, db )
+			configurationData := getConfigurationDataFromRequest( request, db )
+			insertNewConfiguration( configurationData, db )
 		} // else it's a completely new empty entry, nothing to do
 	} else {
 		configurationData = getConfiguration( db, id )
