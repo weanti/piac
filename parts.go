@@ -15,7 +15,7 @@ type PartData struct {
 	Count       int16
 	Price       int32
 	Image       string
-	Id  		int32
+	Id  		string
 }
 
 func createPartsTable(db *sql.DB) error {
@@ -32,9 +32,9 @@ func createPartsTable(db *sql.DB) error {
 
 func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	var partData PartData
-	var brand, model, description, image *string
+	var brand, model, description, image, id *string
 	var count *int16
-	var price, id *int32
+	var price *int32
 	if rows.Next() {
 		err := rows.Scan(&id,
 			&brand,
@@ -117,7 +117,7 @@ func updatePart(db *sql.DB, part PartData) error {
 											strconv.Itoa( int(part.Count) ) + `','` +
 											strconv.Itoa( int(part.Price) ) + `','` +
 											part.Image + `' )` +
-										` WHERE rowid = ` + strconv.Itoa( int(part.Id) ) + `;` )
+										` WHERE rowid = ` + part.Id + `;` )
 	defer rows.Close()
 	return err
 }
@@ -142,12 +142,7 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 	if err == nil {
 		p = int32(n)
 	}
-	var i int32 = 0
-	n, err = strconv.ParseInt(id, 10, 32)
-	if err == nil {
-		i = int32(n)
-	}
-	return  PartData{brand, model, description, c, p, image, i}
+	return  PartData{brand, model, description, c, p, image, id}
 }
 
 func insertNewPart( request *http.Request, db *sql.DB ) PartData {
@@ -175,6 +170,7 @@ func insertNewPart( request *http.Request, db *sql.DB ) PartData {
 func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
 	var partData PartData
+
 	if id == "" {
 		var brand = request.URL.Query().Get("brand")
 		// let brand be the reference, if it's filled then the item shall be saved

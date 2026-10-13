@@ -15,7 +15,7 @@ type ConfigurationData struct {
 	AdditionalPrice     int32
 	AdditionalPriceDesc string
 	Parts               []PartData
-	Id          		int32
+	Id          		string
 }
 
 func createConfigurationsTable(db *sql.DB) error {
@@ -32,8 +32,8 @@ func createConfigurationsTable(db *sql.DB) error {
 
 func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
-	var name, description, additionalPriceDesc *string
-	var price, additionalPrice, id *int32
+	var name, description, additionalPriceDesc, id *string
+	var price, additionalPrice *int32
 	if rows.Next() {
 		// TODO: array of Parts internal IDs
 		err := rows.Scan(&id,
@@ -116,18 +116,14 @@ func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) Config
 	if err == nil {
 		a = int32(n)
 	}
-	var i int32 = 0
-	n, err = strconv.ParseInt( id, 10, 32 )
-	if err == nil {
-		i = int32(n)
-	}
+	
 	var parts []PartData
 	var partIds = values["part"]
 	for partId := range partIds {
 		parts = append( parts, getPart( db, partIds[partId] ) )
 	}
 
-	return ConfigurationData{ name, description, p, a, additionalPriceDescription, parts, i }
+	return ConfigurationData{ name, description, p, a, additionalPriceDescription, parts, id }
 }
 
 func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationData {
@@ -142,7 +138,7 @@ func insertNewConfiguration( request *http.Request, db *sql.DB ) ConfigurationDa
 											configurationData.Description + `','` +	
 											strconv.Itoa( int(configurationData.Price) ) + `','` +
 											strconv.Itoa( int(configurationData.AdditionalPrice) ) + `','` +
-											configurationData.AdditionalPriceDesc + `');'`)
+											configurationData.AdditionalPriceDesc + `');`)
 	defer rows.Close()
 	if err != nil {
 		fmt.Println(err)
@@ -163,7 +159,7 @@ func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
 								strconv.Itoa( int(configuration.Price) ) + `','` +
 								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
 								configuration.AdditionalPriceDesc + `' )` +
-							` WHERE rowid = ` + strconv.Itoa( int(configuration.Id) ) + `;` )
+							` WHERE rowid = ` + configuration.Id + `;` )
 	defer rows.Close()
 	return err
 }
@@ -171,6 +167,7 @@ func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
 func editConfigurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	var id = request.URL.Query().Get("id")
 	var configurationData ConfigurationData
+
 	if id == "" {
 		var name = request.URL.Query().Get("name")
 		if name != "" {
