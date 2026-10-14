@@ -38,38 +38,37 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
-	if rows.Next() {
-		// TODO: array of Parts internal IDs
-		err := rows.Scan(&id,
-			&name,
-			&description,
-			&price,
-			&additionalPrice,
-			&additionalPriceDesc)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			if name != nil {
-				configurationData.Name = *name
-			}
-			if description != nil {
-				configurationData.Description = *description
-			}
-			if additionalPriceDesc != nil {
-				configurationData.AdditionalPriceDesc = *additionalPriceDesc
-			}
-			if price != nil {
-				configurationData.Price = *price
-			}
-			if additionalPrice != nil {
-				configurationData.AdditionalPrice = *additionalPrice
-			}
-			if id != nil {
-				configurationData.Id = *id
-			}
-			return configurationData, nil
+	// TODO: array of Parts internal IDs
+	err := rows.Scan(&id,
+		&name,
+		&description,
+		&price,
+		&additionalPrice,
+		&additionalPriceDesc)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		if name != nil {
+			configurationData.Name = *name
 		}
+		if description != nil {
+			configurationData.Description = *description
+		}
+		if additionalPriceDesc != nil {
+			configurationData.AdditionalPriceDesc = *additionalPriceDesc
+		}
+		if price != nil {
+			configurationData.Price = *price
+		}
+		if additionalPrice != nil {
+			configurationData.AdditionalPrice = *additionalPrice
+		}
+		if id != nil {
+			configurationData.Id = *id
+		}
+		return configurationData, nil
 	}
+
 	return configurationData, errors.New("No data available in query.")
 }
 
