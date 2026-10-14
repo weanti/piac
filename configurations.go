@@ -93,7 +93,9 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	defer rows.Close()
 	var configurationData ConfigurationData
 	if err == nil {
-		configurationData, err = sqlRowToConfigurationData(rows)
+		if rows.Next() {
+			configurationData, err = sqlRowToConfigurationData(rows)
+		}
 	}
 	if err != nil {
 		fmt.Println(err)
