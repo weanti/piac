@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -42,9 +41,11 @@ func getParts(db *sql.DB) []PartData {
 	if err == nil {
 		for err == nil {
 			var partData PartData
-			partData, err = sqlRowToPartData(rows)
-			if err == nil {
-				parts = append(parts, partData)
+			if rows.Next() {
+				partData, err = sqlRowToPartData(rows)
+				if err == nil {
+					parts = append(parts, partData)
+				}
 			}
 		}
 	} else {
@@ -58,7 +59,9 @@ func getPart(db *sql.DB, id string) PartData {
 	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
 	defer rows.Close()
 	if err == nil {
-		partData, err = sqlRowToPartData(rows)
+		if rows.Next() {
+			partData, err = sqlRowToPartData(rows)
+		}
 	}
 	if err != nil {
 		fmt.Println(err)
@@ -71,42 +74,40 @@ func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	var brand, model, description, image, id *string
 	var count *int16
 	var price *int32
-	if rows.Next() {
-		err := rows.Scan(&id,
-			&brand,
-			&model,
-			&description,
-			&count,
-			&price,
-			&image)
-		if err != nil {
-			fmt.Println(err)
-			return PartData{}, err
-		}
-		if brand != nil {
-			partData.Brand = *brand
-		}
-		if model != nil {
-			partData.Model = *model
-		}
-		if description != nil {
-			partData.Description = *description
-		}
-		if count != nil {
-			partData.Count = *count
-		}
-		if price != nil {
-			partData.Price = *price
-		}
-		if image != nil {
-			partData.Image = *image
-		}
-		if id != nil {
-			partData.Id = *id
-		}
-		return partData, nil
+
+	err := rows.Scan(&id,
+		&brand,
+		&model,
+		&description,
+		&count,
+		&price,
+		&image)
+	if err != nil {
+		fmt.Println(err)
+		return PartData{}, err
 	}
-	return partData, errors.New("No data available in query.")
+	if brand != nil {
+		partData.Brand = *brand
+	}
+	if model != nil {
+		partData.Model = *model
+	}
+	if description != nil {
+		partData.Description = *description
+	}
+	if count != nil {
+		partData.Count = *count
+	}
+	if price != nil {
+		partData.Price = *price
+	}
+	if image != nil {
+		partData.Image = *image
+	}
+	if id != nil {
+		partData.Id = *id
+	}
+	return partData, nil
 }
 // Update the part in database. Part is identified by PartData.Id, the rest is the new data.
 func updatePart(part PartData, db *sql.DB) error {
