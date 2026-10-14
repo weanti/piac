@@ -39,13 +39,11 @@ func getParts(db *sql.DB) []PartData {
 	rows, err := db.Query(`SELECT rowid,* from Parts;`)
 	defer rows.Close()
 	if err == nil {
-		for err == nil {
+		for rows.Next() {
 			var partData PartData
-			if rows.Next() {
-				partData, err = sqlRowToPartData(rows)
-				if err == nil {
-					parts = append(parts, partData)
-				}
+			partData, err = sqlRowToPartData(rows)
+			if err == nil {
+				parts = append(parts, partData)
 			}
 		}
 	} else {
