@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"errors"
+	"encoding/binary"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -208,4 +209,28 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 
 	configurationData.Parts = getParts( db )
 	edit_configurationTemplate.Execute( writer, configurationData )
+}
+
+/*****************
+*    Convert	 *
+******************/
+
+func uint16ArrayToByteArray( numbers []uint16 ) []byte {
+	var bytes []byte = make([]byte, len(numbers)*2)
+	for i, v := range numbers {
+		binary.LittleEndian.PutUint16(bytes[i*2:], v)
+	}
+	return bytes
+}
+
+func byteArrayToUint16Array( bytes []byte ) []uint16 {
+	if len(bytes)%2 != 0 {
+		fmt.Errorf("Array length should be even, but it is %d", len(bytes))
+		return []uint16{}
+	}
+	var numbers []uint16 = make([]uint16, len(bytes)/2)
+	for i := range bytes {
+		numbers[i] = binary.LittleEndian.Uint16(bytes[i*2:])
+	}
+	return numbers
 }
