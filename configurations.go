@@ -27,7 +27,8 @@ func createConfigurationsTable(db *sql.DB) error {
 						Description TEXT DEFAULT(''),
 						Price INTEGER DEFAULT(0),
 						AdditionalPrice INTEGER DEFAULT(0),
-						AdditionalPriceDesc TEXT DEFAULT(''));`)
+						AdditionalPriceDesc TEXT DEFAULT(''),
+						Parts BLOB);`)
 	defer rows.Close()
 	// TODO: somehow store the references here
 	return err
@@ -38,13 +39,15 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
+	var parts string
 	// TODO: array of Parts internal IDs
 	err := rows.Scan(&id,
 		&name,
 		&description,
 		&price,
 		&additionalPrice,
-		&additionalPriceDesc)
+		&additionalPriceDesc,
+		&parts)
 	if err != nil {
 		fmt.Println(err)
 	} else {
