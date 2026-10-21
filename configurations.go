@@ -109,18 +109,31 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 
 // Create new configuration in database
 func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) error {
-	rows, err := db.Query( `INSERT INTO Configurations(
+	// TODO: get configurationData.Parts.Id
+	// convert that to bytes
+	// insert
+	var ids []uint16
+	for i := range configurationData.Parts {
+		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
+		if err == nil {
+			ids = append( ids, uint16( n ) )
+		}
+	}
+	var bytes []byte = uint16ArrayToByteArray( ids )
+	_, err := db.Exec( `INSERT INTO Configurations(
 										Name,
 										Description,
 										Price,
 										AdditionalPrice,
-										AdditionalPriceDesc )
-								VALUES('` + configurationData.Name + `','` +
-											configurationData.Description + `','` +	
-											strconv.Itoa( int(configurationData.Price) ) + `','` +
-											strconv.Itoa( int(configurationData.AdditionalPrice) ) + `','` +
-											configurationData.AdditionalPriceDesc + `');`)
-	defer rows.Close()
+										AdditionalPriceDesc,
+										Parts	
+										)
+								VALUES(?, ?, ?, ?, ?, ?)`, configurationData.Name,
+											configurationData.Description,
+											strconv.Itoa( int(configurationData.Price) ),
+											strconv.Itoa( int(configurationData.AdditionalPrice) ),
+											configurationData.AdditionalPriceDesc,
+											bytes )
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -130,14 +143,13 @@ func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) e
 
 // Update the configuration in database. Configuration is identified by ConfigurationData.Id, the rest is the new data.
 func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
-	rows, err := db.Query(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) = ('` +
-								configuration.Name + `','` +
-								configuration.Description + `','` +
-								strconv.Itoa( int(configuration.Price) ) + `','` +
-								strconv.Itoa( int(configuration.AdditionalPrice) ) + `','` +
-								configuration.AdditionalPriceDesc + `' )` +
-							` WHERE rowid = ` + configuration.Id + `;` )
-	defer rows.Close()
+	_, err := db.Exec(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) VALUES (?, ?, ?, ?, ?) WHERE rowid = ?`, 
+								configuration.Name, 
+								configuration.Description,
+								strconv.Itoa( int(configuration.Price) ),
+								strconv.Itoa( int(configuration.AdditionalPrice) ),
+								configuration.AdditionalPriceDesc,
+								configuration.Id )
 	return err
 }
 
