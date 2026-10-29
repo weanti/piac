@@ -149,12 +149,30 @@ func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) e
 
 // Update the configuration in database. Configuration is identified by ConfigurationData.Id, the rest is the new data.
 func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
-	_, err := db.Exec(`UPDATE Configurations SET ( Name, Description, Price, AdditionalPrice, AdditionalPriceDesc ) VALUES (?, ?, ?, ?, ?) WHERE rowid = ?`, 
+	var ids []uint16
+	for i := range configuration.Parts {
+		n, err := strconv.ParseInt( configuration.Parts[i].Id, 10, 16 )
+		if err == nil {
+			ids = append( ids, uint16(n) )
+		} else {
+			fmt.Println( err )
+		}
+	}
+	var bytes []byte = uint16ArrayToByteArray( ids )
+	_, err := db.Exec(`UPDATE Configurations 
+								SET Name = ?,
+									Description = ?,
+									Price = ?,
+									AdditionalPrice = ?,
+									AdditionalPriceDesc = ?,
+									Parts = ?
+								WHERE rowid = ?`, 
 								configuration.Name, 
 								configuration.Description,
 								strconv.Itoa( int(configuration.Price) ),
 								strconv.Itoa( int(configuration.AdditionalPrice) ),
 								configuration.AdditionalPriceDesc,
+								bytes,
 								configuration.Id )
 	return err
 }
