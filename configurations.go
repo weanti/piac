@@ -31,24 +31,22 @@ func createConfigurationsTable(db *sql.DB) error {
 						AdditionalPriceDesc TEXT DEFAULT(''),
 						Parts BLOB);`)
 	defer rows.Close()
-	// TODO: somehow store the references here
 	return err
 }
 
 // Helper function to convert database query result to ConfigurationData
-func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
+func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
-	var parts string
-	// TODO: array of Parts internal IDs
+	var bytes []byte 
 	err := rows.Scan(&id,
 		&name,
 		&description,
 		&price,
 		&additionalPrice,
 		&additionalPriceDesc,
-		&parts)
+		&bytes)
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -70,6 +68,15 @@ func sqlRowToConfigurationData(rows *sql.Rows) (ConfigurationData, error) {
 		if id != nil {
 			configurationData.Id = *id
 		}
+		if bytes != nil {
+			var ids []uint16 = byteArrayToUint16Array( bytes )
+			for i := range ids {
+				var s string = strconv.Itoa( int(ids[i]) )
+				var part PartData = getPart( db, s )
+				// TODO: how to detect error
+				configurationData.Parts = append( configurationData.Parts, part )
+			}
+		}
 		return configurationData, nil
 	}
 
@@ -83,7 +90,7 @@ func getConfigurations( db *sql.DB) []ConfigurationData {
 	defer rows.Close()
 	for rows.Next() {
 		var configurationData ConfigurationData
-		configurationData, err = sqlRowToConfigurationData(rows)
+		configurationData, err = sqlRowToConfigurationData(rows, db)
 		if err == nil {
 			configurations = append(configurations, configurationData)
 		}
@@ -98,7 +105,7 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 	var configurationData ConfigurationData
 	if err == nil {
 		if rows.Next() {
-			configurationData, err = sqlRowToConfigurationData(rows)
+			configurationData, err = sqlRowToConfigurationData(rows, db)
 		}
 	}
 	if err != nil {
@@ -109,14 +116,13 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 
 // Create new configuration in database
 func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) error {
-	// TODO: get configurationData.Parts.Id
-	// convert that to bytes
-	// insert
 	var ids []uint16
 	for i := range configurationData.Parts {
-		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
+		n, err := strconv.ParseInt( configurationData.Parts[i].Id, 10, 16 )
 		if err == nil {
-			ids = append( ids, uint16( n ) )
+			ids = append( ids, uint16(n) )
+		} else {
+			fmt.Println( err )
 		}
 	}
 	var bytes []byte = uint16ArrayToByteArray( ids )
@@ -242,7 +248,9 @@ func byteArrayToUint16Array( bytes []byte ) []uint16 {
 	}
 	var numbers []uint16 = make([]uint16, len(bytes)/2)
 	for i := range bytes {
-		numbers[i] = binary.LittleEndian.Uint16(bytes[i*2:])
+		if i % 2 == 0 {
+			numbers[i] = binary.LittleEndian.Uint16(bytes[i*2:])
+		}
 	}
 	return numbers
 }
