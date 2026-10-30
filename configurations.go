@@ -231,7 +231,9 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 			insertNewConfiguration( configurationData, db )
 		} // else it's a completely new empty entry, nothing to do
 	} else {
+		// it's an existing item being edited
 		configurationData = getConfiguration( db, id )
+		// TODO: set the checkboxes 
 		configurationDataFromRequest := getConfigurationDataFromRequest( request, db )
 		if configurationDataFromRequest.Name != "" {
 			err := updateConfiguration( db, configurationDataFromRequest )

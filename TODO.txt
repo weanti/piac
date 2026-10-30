@@ -1,9 +1,10 @@
 maybe move edit function into separate part?
 configurations:
-- edit configuration page: mark free parts with green, mark shared parts with yellow
-
+- edit configuration page: mark free (only exists in 0 config) parts with green, mark shared parts with yellow
+add "delete" button
 add "go back button" everywhere:
 left side shall be a frame with the menu structure
+Main page should display some ASCII art, centered position and maybe an About section underneath
 * main
 * parts
 * add part
