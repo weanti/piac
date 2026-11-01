@@ -2,8 +2,8 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -16,8 +16,9 @@ type ConfigurationData struct {
 	AdditionalPrice     int32
 	AdditionalPriceDesc string
 	Parts               []PartData
-	Id          		string
+	Id                  string
 }
+
 /*****************
 *    Database    *
 ******************/
@@ -39,7 +40,7 @@ func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, e
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
-	var bytes []byte 
+	var bytes []byte
 	err := rows.Scan(&id,
 		&name,
 		&description,
@@ -69,12 +70,12 @@ func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, e
 			configurationData.Id = *id
 		}
 		if bytes != nil {
-			var ids []uint16 = byteArrayToUint16Array( bytes )
+			var ids []uint16 = byteArrayToUint16Array(bytes)
 			for i := range ids {
-				var s string = strconv.Itoa( int(ids[i]) )
-				var part PartData = getPart( db, s )
+				var s string = strconv.Itoa(int(ids[i]))
+				var part PartData = getPart(db, s)
 				// TODO: how to detect error
-				configurationData.Parts = append( configurationData.Parts, part )
+				configurationData.Parts = append(configurationData.Parts, part)
 			}
 		}
 		return configurationData, nil
@@ -84,7 +85,7 @@ func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, e
 }
 
 // Get all configurations from database
-func getConfigurations( db *sql.DB) []ConfigurationData {
+func getConfigurations(db *sql.DB) []ConfigurationData {
 	var configurations []ConfigurationData
 	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
 	defer rows.Close()
@@ -99,7 +100,7 @@ func getConfigurations( db *sql.DB) []ConfigurationData {
 }
 
 // Get specific configuration from database
-func getConfiguration( db *sql.DB, id string ) ConfigurationData {
+func getConfiguration(db *sql.DB, id string) ConfigurationData {
 	rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
 	defer rows.Close()
 	var configurationData ConfigurationData
@@ -115,18 +116,18 @@ func getConfiguration( db *sql.DB, id string ) ConfigurationData {
 }
 
 // Create new configuration in database
-func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) error {
+func insertNewConfiguration(configurationData ConfigurationData, db *sql.DB) error {
 	var ids []uint16
 	for i := range configurationData.Parts {
-		n, err := strconv.ParseInt( configurationData.Parts[i].Id, 10, 16 )
+		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
 		if err == nil {
-			ids = append( ids, uint16(n) )
+			ids = append(ids, uint16(n))
 		} else {
-			fmt.Println( err )
+			fmt.Println(err)
 		}
 	}
-	var bytes []byte = uint16ArrayToByteArray( ids )
-	_, err := db.Exec( `INSERT INTO Configurations(
+	var bytes []byte = uint16ArrayToByteArray(ids)
+	_, err := db.Exec(`INSERT INTO Configurations(
 										Name,
 										Description,
 										Price,
@@ -135,11 +136,11 @@ func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) e
 										Parts	
 										)
 								VALUES(?, ?, ?, ?, ?, ?)`, configurationData.Name,
-											configurationData.Description,
-											strconv.Itoa( int(configurationData.Price) ),
-											strconv.Itoa( int(configurationData.AdditionalPrice) ),
-											configurationData.AdditionalPriceDesc,
-											bytes )
+		configurationData.Description,
+		strconv.Itoa(int(configurationData.Price)),
+		strconv.Itoa(int(configurationData.AdditionalPrice)),
+		configurationData.AdditionalPriceDesc,
+		bytes)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -148,17 +149,17 @@ func insertNewConfiguration( configurationData ConfigurationData, db *sql.DB ) e
 }
 
 // Update the configuration in database. Configuration is identified by ConfigurationData.Id, the rest is the new data.
-func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
+func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 	var ids []uint16
 	for i := range configuration.Parts {
-		n, err := strconv.ParseInt( configuration.Parts[i].Id, 10, 16 )
+		n, err := strconv.ParseInt(configuration.Parts[i].Id, 10, 16)
 		if err == nil {
-			ids = append( ids, uint16(n) )
+			ids = append(ids, uint16(n))
 		} else {
-			fmt.Println( err )
+			fmt.Println(err)
 		}
 	}
-	var bytes []byte = uint16ArrayToByteArray( ids )
+	var bytes []byte = uint16ArrayToByteArray(ids)
 	_, err := db.Exec(`UPDATE Configurations 
 								SET Name = ?,
 									Description = ?,
@@ -166,24 +167,23 @@ func updateConfiguration( db *sql.DB, configuration ConfigurationData ) error {
 									AdditionalPrice = ?,
 									AdditionalPriceDesc = ?,
 									Parts = ?
-								WHERE rowid = ?`, 
-								configuration.Name, 
-								configuration.Description,
-								strconv.Itoa( int(configuration.Price) ),
-								strconv.Itoa( int(configuration.AdditionalPrice) ),
-								configuration.AdditionalPriceDesc,
-								bytes,
-								configuration.Id )
+								WHERE rowid = ?`,
+		configuration.Name,
+		configuration.Description,
+		strconv.Itoa(int(configuration.Price)),
+		strconv.Itoa(int(configuration.AdditionalPrice)),
+		configuration.AdditionalPriceDesc,
+		bytes,
+		configuration.Id)
 	return err
 }
-
 
 /*****************
 *      HTML      *
 ******************/
 
 // Helper function that convert GET method params to ConfigurationData
-func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) ConfigurationData {
+func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) ConfigurationData {
 	var values = request.URL.Query()
 	var name = values.Get("name")
 	var description = values.Get("description")
@@ -194,28 +194,28 @@ func getConfigurationDataFromRequest( request *http.Request, db *sql.DB ) Config
 	var n int64
 	var p int32 = 0
 	var err error
-	n, err = strconv.ParseInt( price, 10, 32 )
+	n, err = strconv.ParseInt(price, 10, 32)
 	if err == nil {
 		p = int32(n)
 	}
 	var a int32 = 0
-	n, err = strconv.ParseInt( additionalPrice, 10, 32 )
+	n, err = strconv.ParseInt(additionalPrice, 10, 32)
 	if err == nil {
 		a = int32(n)
 	}
-	
+
 	var parts []PartData
 	var partIds = values["part"]
 	for partId := range partIds {
-		parts = append( parts, getPart( db, partIds[partId] ) )
+		parts = append(parts, getPart(db, partIds[partId]))
 	}
 
-	return ConfigurationData{ name, description, p, a, additionalPriceDescription, parts, id }
+	return ConfigurationData{name, description, p, a, additionalPriceDescription, parts, id}
 }
 
 // Main function for displaying configurations in configurations.html.
 func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	configurations := getConfigurations( db )
+	configurations := getConfigurations(db)
 	configurationTemplate.Execute(writer, configurations)
 }
 
@@ -224,36 +224,39 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	var id = request.URL.Query().Get("id")
 	var configurationData ConfigurationData
 
+	// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
 	if id == "" {
 		var name = request.URL.Query().Get("name")
 		if name != "" {
-			configurationData := getConfigurationDataFromRequest( request, db )
-			insertNewConfiguration( configurationData, db )
+			configurationData := getConfigurationDataFromRequest(request, db)
+			insertNewConfiguration(configurationData, db)
 		} // else it's a completely new empty entry, nothing to do
-	} else {
-		// it's an existing item being edited
-		configurationData = getConfiguration( db, id )
-		// TODO: set the checkboxes 
-		configurationDataFromRequest := getConfigurationDataFromRequest( request, db )
+	} else { // saved = existing item
+		// TODO: set the checkboxes
+		configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
+		// if the request contains data (other then the id) then the edited data is sent for storing
 		if configurationDataFromRequest.Name != "" {
-			err := updateConfiguration( db, configurationDataFromRequest )
+			err := updateConfiguration(db, configurationDataFromRequest)
 			if err == nil {
 				configurationData = configurationDataFromRequest
 			} else {
 				fmt.Println(err)
 			}
+		} else {
+			// by default the data from database will be displayed
+			configurationData = getConfiguration(db, id)
 		}
 	}
 
-	configurationData.Parts = getParts( db )
-	edit_configurationTemplate.Execute( writer, configurationData )
+	configurationData.Parts = getParts(db)
+	edit_configurationTemplate.Execute(writer, configurationData)
 }
 
 /*****************
 *    Convert	 *
 ******************/
 
-func uint16ArrayToByteArray( numbers []uint16 ) []byte {
+func uint16ArrayToByteArray(numbers []uint16) []byte {
 	var bytes []byte = make([]byte, len(numbers)*2)
 	for i, v := range numbers {
 		binary.LittleEndian.PutUint16(bytes[i*2:], v)
@@ -261,14 +264,14 @@ func uint16ArrayToByteArray( numbers []uint16 ) []byte {
 	return bytes
 }
 
-func byteArrayToUint16Array( bytes []byte ) []uint16 {
+func byteArrayToUint16Array(bytes []byte) []uint16 {
 	if len(bytes)%2 != 0 {
 		fmt.Errorf("Array length should be even, but it is %d", len(bytes))
 		return []uint16{}
 	}
 	var numbers []uint16 = make([]uint16, len(bytes)/2)
 	for i := range bytes {
-		if i % 2 == 0 {
+		if i%2 == 0 {
 			numbers[i] = binary.LittleEndian.Uint16(bytes[i*2:])
 		}
 	}
