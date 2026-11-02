@@ -247,6 +247,13 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 			configurationData = getConfiguration(db, id)
 		}
 	}
+	// TODO: this is demo data, query those that are not part of any configurations
+	// allparts = getParts()
+	// Foreach config : configurations
+	//  foreach part : conf.parts
+	//     if part is in allparts
+	//     allparts.remove(part)
+	// NOW allparts remains: unused parts
 	var freeParts []PartData = getParts(db)
 	var data = map[string]any{
 		"Configuration": configurationData,
