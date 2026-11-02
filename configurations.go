@@ -262,7 +262,7 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 func uint16ArrayToByteArray(numbers []uint16) []byte {
 	var bytes []byte = make([]byte, len(numbers)*2)
 	for i, v := range numbers {
-		binary.LittleEndian.PutUint16(bytes[i*2:], v)
+		binary.LittleEndian.PutUint16(bytes[2*i:2*i+2], v)
 	}
 	return bytes
 }
@@ -275,7 +275,7 @@ func byteArrayToUint16Array(bytes []byte) []uint16 {
 	var numbers []uint16 = make([]uint16, len(bytes)/2)
 	for i := range bytes {
 		if i%2 == 0 {
-			numbers = append(numbers, binary.LittleEndian.Uint16(bytes[i:i+2]))
+			numbers[i/2] = binary.LittleEndian.Uint16(bytes[i : i+2])
 		}
 	}
 	return numbers
