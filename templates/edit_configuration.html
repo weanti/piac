@@ -9,25 +9,33 @@
     <form action="edit_configuration.html">
 
     <label for="name">Name</label>
-	<input type="text" id="name" name="name" value="{{.Name}}"><br>
+	<input type="text" id="name" name="name" value="{{.Configuration.Name}}"><br>
 
     <label for="description">Description</label>
-	<input type="text" id="description" name="description" value="{{.Description}}"><br>
+	<input type="text" id="description" name="description" value="{{.Configuration.Description}}"><br>
 
 
     <label for="price">Price</label>
-	<input type="text" id="price" name="price" value="{{.Price}}"><br>
+	<input type="text" id="price" name="price" value="{{.Configuration.Price}}"><br>
 
     <label for="additional_price">Additional price</label>
-	<input type="text" id="additional_price" name="additional_price" value="{{.AdditionalPrice}}"><br>
+	<input type="text" id="additional_price" name="additional_price" value="{{.Configuration.AdditionalPrice}}"><br>
 
     <label for="additional_price_desc">Additional price description</label>
-	<input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.AdditionalPriceDesc}}"><br>
+	<input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.Configuration.AdditionalPriceDesc}}"><br>
 
-    <table border="1" title="Parts">
+	<!-- parts included -->
+    <table border="1" title="Parts included">
 	<tr><td>Brand</td><td>Model</td></tr>
-	{{range .Parts}}
-	<tr><td> <input type="checkbox" name="part" value="{{.Id}}"> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+	{{range .Configuration.Parts}}
+	<tr><td> <input type="checkbox" name="part" value="{{.Id}}" checked	> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+	{{end}}
+    </table>
+	<!-- parts not included -->
+    <table border="1" title="Free parts">
+	<tr><td>Brand</td><td>Model</td></tr>
+	{{range .FreeParts}}
+	<tr><td> <input type="checkbox" name="part" value="{{.Id}}" unchecked> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
 	{{end}}
     </table>
 

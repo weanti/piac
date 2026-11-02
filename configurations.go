@@ -247,9 +247,12 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 			configurationData = getConfiguration(db, id)
 		}
 	}
-
-	configurationData.Parts = getParts(db)
-	edit_configurationTemplate.Execute(writer, configurationData)
+	var freeParts []PartData = getParts(db)
+	var data = map[string]any{
+		"Configuration": configurationData,
+		"FreeParts":     freeParts,
+	}
+	edit_configurationTemplate.Execute(writer, data)
 }
 
 /*****************
@@ -272,7 +275,7 @@ func byteArrayToUint16Array(bytes []byte) []uint16 {
 	var numbers []uint16 = make([]uint16, len(bytes)/2)
 	for i := range bytes {
 		if i%2 == 0 {
-			numbers[i] = binary.LittleEndian.Uint16(bytes[i*2:])
+			numbers = append(numbers, binary.LittleEndian.Uint16(bytes[i:i+2]))
 		}
 	}
 	return numbers
