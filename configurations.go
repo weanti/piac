@@ -231,7 +231,6 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 			insertNewConfiguration(configurationData, db)
 		} // else it's a completely new empty entry, nothing to do
 	} else { // saved = existing item
-		// TODO: set the checkboxes
 		configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
 		// if the request contains data (other then the id) then the edited data is sent for storing
 		if configurationDataFromRequest.Name != "" {
@@ -246,6 +245,16 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 			configurationData = getConfiguration(db, id)
 		}
 	}
+	var freeParts []PartData = getParts(db)
+	for _, usedpart := range configurationData.Parts {
+		for i, freepart := range freeParts {
+			if usedpart.Id == freepart.Id {
+				// TODO: move this into helpers as remove()
+				freeParts[i] = freeParts[len(freeParts)-1]
+				freeParts = freeParts[:len(freeParts)-1]
+			}
+		}
+	}
 	// TODO: this is demo data, query those that are not part of any configurations
 	// allparts = getParts()
 	// Foreach config : configurations
@@ -253,7 +262,6 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	//     if part is in allparts
 	//     allparts.remove(part)
 	// NOW allparts remains: unused parts
-	var freeParts []PartData = getParts(db)
 	var data = map[string]any{
 		"Configuration": configurationData,
 		"FreeParts":     freeParts,
