@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-/*****************
-*    Convert	 *
-******************/
-
 func uint16ArrayToByteArray(numbers []uint16) []byte {
 	var bytes []byte = make([]byte, len(numbers)*2)
 	for i, v := range numbers {
@@ -29,4 +25,10 @@ func byteArrayToUint16Array(bytes []byte) []uint16 {
 		}
 	}
 	return numbers
+}
+
+func remove[T any](array []T, idx int) []T {
+	array[idx] = array[len(array)-1]
+	array = array[:len(array)-1]
+	return array
 }

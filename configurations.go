@@ -249,19 +249,10 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	for _, usedpart := range configurationData.Parts {
 		for i, freepart := range freeParts {
 			if usedpart.Id == freepart.Id {
-				// TODO: move this into helpers as remove()
-				freeParts[i] = freeParts[len(freeParts)-1]
-				freeParts = freeParts[:len(freeParts)-1]
+				freeParts = remove(freeParts, i)
 			}
 		}
 	}
-	// TODO: this is demo data, query those that are not part of any configurations
-	// allparts = getParts()
-	// Foreach config : configurations
-	//  foreach part : conf.parts
-	//     if part is in allparts
-	//     allparts.remove(part)
-	// NOW allparts remains: unused parts
 	var data = map[string]any{
 		"Configuration": configurationData,
 		"FreeParts":     freeParts,
