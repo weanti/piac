@@ -14,9 +14,9 @@
 		<td>{{.Description}}</td>
 		<td> <!-- parts -->
 		    <table border="1" title="Parts">
-			<tr><td>Brand</td><td>Model</td><td><!-- edit --></td></tr>
+			<tr><td>Brand</td><td>Model</td></tr>
 			{{range .Parts}}
-			<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td><a href="edit_part.html?id={{.Id}}">Edit</a></td></tr>
+			<tr><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
 			{{end}}
 		    </table>
 		</td>
