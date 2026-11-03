@@ -24,19 +24,20 @@
     <label for="additional_price_desc">Additional price description</label>
 	<input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.Configuration.AdditionalPriceDesc}}"><br>
 
-	<!-- parts included -->
     <table border="1" title="Parts included">
-	<tr><td>Brand</td><td>Model</td></tr>
-	{{range .Configuration.Parts}}
-	<tr><td> <input type="checkbox" name="part" value="{{.Id}}" checked	> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
-	{{end}}
-    </table>
-	<!-- parts not included -->
-    <table border="1" title="Free parts">
-	<tr><td>Brand</td><td>Model</td></tr>
-	{{range .FreeParts}}
-	<tr><td> <input type="checkbox" name="part" value="{{.Id}}" unchecked> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
-	{{end}}
+	    <caption>Parts included</caption>
+		<tr><th><!-- checkbox--></th><th>Brand</th><th>Model</th></tr>
+		{{range .Configuration.Parts}}
+		<tr><td> <input type="checkbox" name="part" value="{{.Id}}" checked	> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+		{{end}}
+	</table>
+
+	<table border="1" title="Free parts">
+	    <caption>Parts not included</caption>
+		<tr><th><!-- checkbox--></th><th>Brand</th><th>Model</th></tr>
+		{{range .FreeParts}}
+		<tr><td> <input type="checkbox" name="part" value="{{.Id}}" unchecked> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+		{{end}}
     </table>
 
 	<input type="hidden" name="id" value="{{.Id}}">

@@ -7,9 +7,11 @@
     <h1>Configurations</h1>
 
     <table border="1" title="Configurations">
-	    <tr><td>Name</td><td>Description</td> <td>Parts</td> <td>Price</td><td>Additional price</td><td>Additional price description</td><td><!-- edit --></td></tr>
+	    <tr><th>Name</th><th>Description</th><th>Parts</th><th>Price</th><th>Additional price</th><th>Additional price description</th><th><!-- edit --></th></tr>
 	{{range .}}
-	<tr>	<td>{{.Name}}</td> <td>{{.Description}}</td>
+	<tr>	
+		<td>{{.Name}}</td>
+		<td>{{.Description}}</td>
 		<td> <!-- parts -->
 		    <table border="1" title="Parts">
 			<tr><td>Brand</td><td>Model</td><td><!-- edit --></td></tr>
