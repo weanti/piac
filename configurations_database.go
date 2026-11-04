@@ -26,7 +26,7 @@ func getConfigurations(db *sql.DB) []ConfigurationData {
 	defer rows.Close()
 	for rows.Next() {
 		var configurationData ConfigurationData
-		configurationData, err = sqlRowToConfigurationData(rows, db)
+		configurationData, err = sqlRowToConfigurationData(db, rows)
 		if err == nil {
 			configurations = append(configurations, configurationData)
 		}
@@ -41,7 +41,7 @@ func getConfiguration(db *sql.DB, id string) ConfigurationData {
 	var configurationData ConfigurationData
 	if err == nil {
 		if rows.Next() {
-			configurationData, err = sqlRowToConfigurationData(rows, db)
+			configurationData, err = sqlRowToConfigurationData(db, rows)
 		}
 	}
 	if err != nil {
@@ -51,7 +51,7 @@ func getConfiguration(db *sql.DB, id string) ConfigurationData {
 }
 
 // Create new configuration in database
-func insertNewConfiguration(configurationData ConfigurationData, db *sql.DB) error {
+func insertNewConfiguration(db *sql.DB, configurationData ConfigurationData) error {
 	var ids []uint16
 	for i := range configurationData.Parts {
 		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
@@ -114,7 +114,7 @@ func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 }
 
 // Helper function to convert database query result to ConfigurationData
-func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, error) {
+func sqlRowToConfigurationData(db *sql.DB, rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
@@ -148,6 +148,8 @@ func sqlRowToConfigurationData(rows *sql.Rows, db *sql.DB) (ConfigurationData, e
 			configurationData.Id = *id
 		}
 		if bytes != nil {
+			// TODO: maybe do this separately: store only part ids here and fill parts in another function
+			// db shoult not be part of this function
 			var ids []uint16 = byteArrayToUint16Array(bytes)
 			for i := range ids {
 				var s string = strconv.Itoa(int(ids[i]))

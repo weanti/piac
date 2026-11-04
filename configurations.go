@@ -68,7 +68,7 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 		var name = request.URL.Query().Get("name")
 		if name != "" {
 			configurationData := getConfigurationDataFromRequest(request, db)
-			insertNewConfiguration(configurationData, db)
+			insertNewConfiguration(db, configurationData)
 		} // else it's a completely new empty entry, nothing to do
 	} else { // saved = existing item
 		configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
