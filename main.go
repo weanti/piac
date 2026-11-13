@@ -13,6 +13,7 @@ var partsTemplate = template.Must( template.ParseFiles("templates/parts.html") )
 var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.html"))
 var configurationTemplate = template.Must( template.ParseFiles( "templates/configurations.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
+var save_configurationTemplate =  template.Must( template.ParseFiles("templates/save_configuration.html"))
 
 func createDatabaseTables(db *sql.DB) error {
 	err := createPartsTable( db )
@@ -57,5 +58,6 @@ func main() {
 	http.HandleFunc("/templates/edit_part.html", func( w http.ResponseWriter, r *http.Request) { editPartHandler(w, r, db) } )
 	http.HandleFunc("/templates/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_configuration.html", func(w http.ResponseWriter, r *http.Request) { editConfigurationHandler(w, r, db) } )
+	http.HandleFunc("/templates/save_configuration.html", func(w http.ResponseWriter, r *http.Request) { saveConfigurationHandler(w, r, db) } )
 	http.ListenAndServe(":8080", nil)
 }

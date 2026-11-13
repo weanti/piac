@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -65,25 +64,10 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 
 	// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
 	if id == "" {
-		var name = request.URL.Query().Get("name")
-		if name != "" {
-			configurationData := getConfigurationDataFromRequest(request, db)
-			insertNewConfiguration(db, configurationData)
-		} // else it's a completely new empty entry, nothing to do
+		// it's a completely new empty entry, nothing to do
 	} else { // saved = existing item
-		configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
-		// if the request contains data (other then the id) then the edited data is sent for storing
-		if configurationDataFromRequest.Name != "" {
-			err := updateConfiguration(db, configurationDataFromRequest)
-			if err == nil {
-				configurationData = configurationDataFromRequest
-			} else {
-				fmt.Println(err)
-			}
-		} else {
-			// by default the data from database will be displayed
-			configurationData = getConfiguration(db, id)
-		}
+		// by default the data from database will be displayed
+		configurationData = getConfiguration(db, id)
 	}
 	var freeParts []PartData = getParts(db)
 	for _, usedpart := range configurationData.Parts {
