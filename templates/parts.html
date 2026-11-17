@@ -10,7 +10,15 @@
     <table border="1" title="Parts">
 	<tr><th>Brand</th><th>Model</th><th>Description</th><th>Count</th><th>Price</th><th>Image</th><th><!-- edit --></th></tr>
 	{{range .}}
-	<tr><td>{{.Brand}}</td><td>{{.Model}}</td><td>{{.Description}}</td><td>{{.Count}}</td><td>{{.Price}}</td><td><img src="/images/{{.Image}}"></td><td><a href="edit_part.html?id={{.Id}}">Edit</a></td></tr>
+    <tr>
+        <td>{{.Brand}}</td>
+        <td>{{.Model}}</td>
+        <td>{{.Description}}</td>
+        <td>{{.Count}}</td>
+        <td>{{.Price}}</td>
+        <td><img src="/images/{{.Image}}"></td>
+        <td><form action="edit_part.html"><input type="submit" value="Edit"/><input type="hidden" name="id" value="{{.Id}}"/></form></td>
+    </tr>
 	{{end}}
     </table>
     <a href="edit_part.html?id=">Add part</a>
