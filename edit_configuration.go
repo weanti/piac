@@ -14,7 +14,7 @@ func editConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	if id == "" {
 		// it's a completely new empty entry, nothing to do
 	} else { // saved = existing item
-		// by default the data from database will be displayed
+		// load data for editing
 		configurationData = getConfiguration(db, id)
 	}
 	var freeParts []PartData = getParts(db)
