@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -21,35 +20,6 @@ type PartData struct {
 func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
 	parts := getParts(db)
 	partsTemplate.Execute(writer, parts)
-}
-
-// Main function for displaying edited part in edit_part.html
-func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
-	var id = request.URL.Query().Get("id")
-	var partData PartData
-
-	if id == "" {
-		var brand = request.URL.Query().Get("brand")
-		// let brand be the reference, if it's filled then the item shall be saved
-		if brand != "" {
-			partData := getPartDataFromRequest( request )
-			insertNewPart( partData, db )
-		} // else it's a completely empty entry, nothing to do
-	} else {
-		// load existing data
-		partData = getPart( db, id )
-		// if request contains data then it is modified
-		partDataFromRequest := getPartDataFromRequest( request )
-		if partDataFromRequest.Model != "" {
-			err := updatePart( partDataFromRequest, db )
-			if err == nil {
-				partData = partDataFromRequest
-			} else {
-				fmt.Println(err)
-			}
-		}
-	}
-	edit_partTemplate.Execute(writer, partData)
 }
 
 // Helper function that convert GET method params to PartData
