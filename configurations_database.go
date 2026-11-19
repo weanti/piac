@@ -8,14 +8,13 @@ import (
 )
 // Create Configurations database table
 func createConfigurationsTable(db *sql.DB) error {
-	rows, err := db.Query(`CREATE TABLE Configurations(
+	_, err := db.Exec(`CREATE TABLE Configurations(
 						Name TEXT NOT NULL,
 						Description TEXT DEFAULT(''),
 						Price INTEGER DEFAULT(0),
 						AdditionalPrice INTEGER DEFAULT(0),
 						AdditionalPriceDesc TEXT DEFAULT(''),
 						Parts BLOB);`)
-	defer rows.Close()
 	return err
 }
 
@@ -63,14 +62,14 @@ func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error 
 	}
 	var bytes []byte = uint16ArrayToByteArray(ids)
 	_, err := db.Exec(`INSERT INTO Configurations(
-										Name,
-										Description,
-										Price,
-										AdditionalPrice,
-										AdditionalPriceDesc,
-										Parts	
-										)
-								VALUES(?, ?, ?, ?, ?, ?)`, configurationData.Name,
+						Name,
+						Description,
+						Price,
+						AdditionalPrice,
+						AdditionalPriceDesc,
+						Parts	
+						)
+				VALUES(?, ?, ?, ?, ?, ?)`, configurationData.Name,
 		configurationData.Description,
 		strconv.Itoa(int(configurationData.Price)),
 		strconv.Itoa(int(configurationData.AdditionalPrice)),
@@ -92,13 +91,13 @@ func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 	}
 	var bytes []byte = uint16ArrayToByteArray(ids)
 	_, err := db.Exec(`UPDATE Configurations 
-								SET Name = ?,
-									Description = ?,
-									Price = ?,
-									AdditionalPrice = ?,
-									AdditionalPriceDesc = ?,
-									Parts = ?
-								WHERE rowid = ?`,
+				SET Name = ?,
+					Description = ?,
+					Price = ?,
+					AdditionalPrice = ?,
+					AdditionalPriceDesc = ?,
+					Parts = ?
+				WHERE rowid = ?`,
 		configuration.Name,
 		configuration.Description,
 		strconv.Itoa(int(configuration.Price)),
