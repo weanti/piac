@@ -12,13 +12,13 @@ func savePartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 	if partDataFromRequest.Brand != "" {
 		if id == "" {
 			// saving new item
-			err := insertNewPart(partDataFromRequest, db)
+			err := insertPart(db, partDataFromRequest)
 			if err != nil {
 				fmt.Println(err)
 			}
 		} else {
 			// update existing item
-			err := updatePart(partDataFromRequest, db)	
+			err := updatePart(db, partDataFromRequest)
 			if err != nil {
 				fmt.Println(err)
 			}

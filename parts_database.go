@@ -8,14 +8,13 @@ import (
 
 // Create Parts database table
 func createPartsTable(db *sql.DB) error {
-	rows, err := db.Query(`CREATE TABLE Parts(
+	_, err := db.Exec(`CREATE TABLE Parts(
 						Brand TEXT NOT NULL,
 						Model TEXT NOT NULL, 
 						Description TEXT DEFAULT(''),
 						Count INTEGER DEFAULT(1),
 						Price INTEGER DEFAULT(0),
 						Image TEXT);`)
-	defer rows.Close()
 	return err
 }
 
@@ -38,43 +37,6 @@ func getParts(db *sql.DB) []PartData {
 	return parts
 }
 
-// Update the part in database. Part is identified by PartData.Id, the rest is the new data.
-func updatePart(part PartData, db *sql.DB) error {
-	rows, err := db.Query(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = ('` +
-											part.Brand + `','` +
-											part.Model + `','` +
-											part.Description + `','` +
-											strconv.Itoa( int(part.Count) ) + `','` +
-											strconv.Itoa( int(part.Price) ) + `','` +
-											part.Image + `' )` +
-										` WHERE rowid = ` + part.Id + `;` )
-	defer rows.Close()
-	return err
-}
-// Create new part in database.
-func insertNewPart(partData PartData, db *sql.DB) error {
-	var err error = nil
-	var rows *sql.Rows = nil
-	rows, err = db.Query(`INSERT INTO Parts (
-									Brand,
-									Model,
-									Description,
-									Count,
-									Price,
-									Image )
-							VALUES ('` + partData.Brand + `','` +
-										partData.Model + `','` +
-										partData.Description + `',` +
-										strconv.Itoa( int(partData.Count) ) + `,` +
-										strconv.Itoa( int(partData.Price) ) + `,'` +
-										partData.Image + `');`)
-	defer rows.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-	return err
-}
-
 // Get specific part from database
 func getPart(db *sql.DB, id string) PartData {
 	var partData PartData
@@ -89,6 +51,39 @@ func getPart(db *sql.DB, id string) PartData {
 		fmt.Println(err)
 	}
 	return partData
+}
+
+// Update the part in database. Part is identified by PartData.Id, the rest is the new data.
+func updatePart(db *sql.DB, part PartData) error {
+	_, err := db.Exec(	`UPDATE Parts SET (Brand, Model, Description, Count, Price, Image ) = ('` +
+											part.Brand + `','` +
+											part.Model + `','` +
+											part.Description + `','` +
+											strconv.Itoa( int(part.Count) ) + `','` +
+											strconv.Itoa( int(part.Price) ) + `','` +
+											part.Image + `' )` +
+										` WHERE rowid = ` + part.Id + `;` )
+	return err
+}
+// Create new part in database.
+func insertPart(db *sql.DB, partData PartData ) error {
+	_, err := db.Exec(`INSERT INTO Parts (
+									Brand,
+									Model,
+									Description,
+									Count,
+									Price,
+									Image )
+							VALUES ('` + partData.Brand + `','` +
+										partData.Model + `','` +
+										partData.Description + `',` +
+										strconv.Itoa( int(partData.Count) ) + `,` +
+										strconv.Itoa( int(partData.Price) ) + `,'` +
+										partData.Image + `');`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return err
 }
 
 // Helper function to convert database query result to PartData
