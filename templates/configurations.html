@@ -1,37 +1,37 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Configurations</title>
-</head>
-<body>
-    <h1>Configurations</h1>
+	<head>
+		<title>Configurations</title>
+	</head>
+	<body>
+		<h1>Configurations</h1>
 
-    <table border="1" title="Configurations">
-	    <tr><th>Name</th><th>Description</th><th>Parts</th><th>Price</th><th>Additional price</th><th>Additional price description</th><th><!-- edit --></th></tr>
-	{{range .}}
-	<tr>	
-		<td>{{.Name}}</td>
-		<td>{{.Description}}</td>
-		<td> <!-- parts -->
-		    <table border="1" title="Parts">
-			<tr><td>Brand</td><td>Model</td></tr>
-			{{range .Parts}}
-			<tr><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+		<table border="1" title="Configurations">
+			<tr><th>Name</th><th>Description</th><th>Parts</th><th>Price</th><th>Additional price</th><th>Additional price description</th><th><!-- edit --></th></tr>
+			{{range .}}
+			<tr>	
+				<td>{{.Name}}</td>
+				<td>{{.Description}}</td>
+				<td> <!-- parts -->
+					<table border="1" title="Parts">
+						<tr><td>Brand</td><td>Model</td></tr>
+						{{range .Parts}}
+						<tr><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+						{{end}}
+					</table>
+				</td>
+				<td>{{.Price}}</td>
+				<td>{{.AdditionalPrice}}</td>
+				<td>{{.AdditionalPriceDesc}}</td>
+				<td>
+					<form action="edit_configuration.html">
+						<input type="submit" value="Edit"/>
+						<input type="hidden" name="id" value="{{.Id}}"/>
+					</form>
+				</td>
+			</tr>
 			{{end}}
-		    </table>
-		</td>
-    	<td>{{.Price}}</td>
-		<td>{{.AdditionalPrice}}</td>
-		<td>{{.AdditionalPriceDesc}}</td>
-        <td>
-		<form action="edit_configuration.html">
-			<input type="submit" value="Edit"/>
-			<input type="hidden" name="id" value="{{.Id}}"/>
-		</form>
-	</td>
-	</tr>
-	{{end}}
-    </table>
-    <form action="edit_configuration.html"><input type="submit" value="Add configuration"/><input type="hidden" name="id" value=""/></form>
-</body>
+		</table>
+		<form action="edit_configuration.html"><input type="submit" value="Add configuration"/><input type="hidden" name="id" value=""/></form>
+	</body>
 </html>
