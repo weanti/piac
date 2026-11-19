@@ -75,7 +75,7 @@ func saveConfigurationAction( request *http.Request, db *sql.DB ) {
 	configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
 	// reference data, name should be essential
 	if configurationDataFromRequest.Name != "" {
-	// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
+		// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
 		if id == "" {
 			err := insertConfiguration(db, configurationDataFromRequest)
 			if err != nil {
@@ -94,4 +94,11 @@ func saveConfigurationAction( request *http.Request, db *sql.DB ) {
 }
 
 func deleteConfigurationAction( request *http.Request, db *sql.DB ) {
+	var id string = request.URL.Query().Get("id")
+	if id != "" {
+		err := deleteConfiguration(db, id)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }

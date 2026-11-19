@@ -108,6 +108,11 @@ func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 	return err
 }
 
+func deleteConfiguration(db *sql.DB, id string) error {
+	_, err := db.Exec("DELETE FROM Configurations WHERE rowid = ?", id )
+	return err
+}
+
 // Helper function to convert database query result to ConfigurationData
 func sqlRowToConfigurationData(db *sql.DB, rows *sql.Rows) (ConfigurationData, error) {
 	var configurationData ConfigurationData

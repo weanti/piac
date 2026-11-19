@@ -28,6 +28,11 @@
 						<input type="submit" value="Edit"/>
 						<input type="hidden" name="id" value="{{.Id}}"/>
 					</form>
+					<form action="configurations.html">
+						<input type="submit" value="Delete"/>
+						<input type="hidden" name="id" value="{{.Id}}"/>
+						<input type="hidden" name="action" value="delete"/>
+					</form>
 				</td>
 			</tr>
 			{{end}}
