@@ -14,7 +14,7 @@ func saveConfigurationHandler(writer http.ResponseWriter, request *http.Request,
 	if configurationDataFromRequest.Name != "" {
 	// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
 		if id == "" {
-			err := insertNewConfiguration(db, configurationDataFromRequest)
+			err := insertConfiguration(db, configurationDataFromRequest)
 			if err != nil {
 				fmt.Println( err )
 			}

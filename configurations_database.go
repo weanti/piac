@@ -51,7 +51,7 @@ func getConfiguration(db *sql.DB, id string) ConfigurationData {
 }
 
 // Create new configuration in database
-func insertNewConfiguration(db *sql.DB, configurationData ConfigurationData) error {
+func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error {
 	var ids []uint16
 	for i := range configurationData.Parts {
 		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
