@@ -11,7 +11,6 @@ import (
 
 var partsTemplate = template.Must( template.ParseFiles("templates/parts.html") )
 var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.html"))
-var save_partTemplate = template.Must( template.ParseFiles("templates/save_part.html"))
 var configurationTemplate = template.Must( template.ParseFiles( "templates/configurations.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
 var save_configurationTemplate =  template.Must( template.ParseFiles("templates/save_configuration.html"))
@@ -57,7 +56,6 @@ func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "templates/index.html") })
 	http.HandleFunc("/templates/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_part.html", func( w http.ResponseWriter, r *http.Request) { editPartHandler(w, r, db) } )
-	http.HandleFunc("/templates/save_part.html", func( w http.ResponseWriter, r *http.Request) { savePartHandler(w, r, db) } )
 	http.HandleFunc("/templates/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
 	http.HandleFunc("/templates/edit_configuration.html", func(w http.ResponseWriter, r *http.Request) { editConfigurationHandler(w, r, db) } )
 	http.HandleFunc("/templates/save_configuration.html", func(w http.ResponseWriter, r *http.Request) { saveConfigurationHandler(w, r, db) } )

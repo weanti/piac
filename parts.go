@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -18,8 +19,53 @@ type PartData struct {
 
 // Main function for displaying parts list in parts.html
 func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	var action string = request.URL.Query().Get("action")
+	switch action {
+	case "show":
+		showPartsAction( writer, db )
+	case "save":
+		savePartAction( request, db )
+	case "delete":
+		deletePartAction( request, db )
+	default:
+		// TODO: exit here!
+		fmt.Println("Unknown action")
+	}
+}
+
+func showPartsAction( writer http.ResponseWriter, db *sql.DB ) {
 	parts := getParts(db)
 	partsTemplate.Execute(writer, parts)
+}
+
+func savePartAction(request *http.Request, db *sql.DB ) {
+	var id = request.URL.Query().Get("id")
+	partDataFromRequest := getPartDataFromRequest(request)
+	if partDataFromRequest.Brand != "" {
+		if id == "" {
+			// saving new item
+			err := insertPart(db, partDataFromRequest)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			// update existing item
+			err := updatePart(db, partDataFromRequest)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+
+}
+
+func deletePartAction( request *http.Request, db *sql.DB ) {
+	// TODO: check if id is not empty
+	var id string = request.URL.Query().Get("id")
+	err := deletePart( db, id )
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 // Helper function that convert GET method params to PartData

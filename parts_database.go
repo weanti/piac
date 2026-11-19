@@ -86,6 +86,11 @@ func insertPart(db *sql.DB, partData PartData ) error {
 	return err
 }
 
+func deletePart(db *sql.DB, id string) error {
+	_, err := db.Exec("DELETE from Parts WHERE rowid = ?", id )
+	return err
+ }
+
 // Helper function to convert database query result to PartData
 func sqlRowToPartData(rows *sql.Rows) (PartData, error) {
 	var partData PartData
