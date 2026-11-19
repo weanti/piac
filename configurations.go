@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -15,10 +16,6 @@ type ConfigurationData struct {
 	Parts               []PartData
 	Id                  string
 }
-
-/*****************
-*      HTML      *
-******************/
 
 // Helper function that convert GET method params to ConfigurationData
 func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) ConfigurationData {
@@ -53,7 +50,48 @@ func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) Configur
 
 // Main function for displaying configurations in configurations.html.
 func configurationHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB) {
+	var action string = request.URL.Query().Get("action")
+	switch action {
+	case "show":
+		showConfigurationsAction( writer, db )
+	case "save":
+		saveConfigurationAction( request, db )
+	case "delete":
+		deleteConfigurationAction( request, db )
+	default:
+		// TODO: exit here!
+		fmt.Println("Unknown action")
+	}
+}
+
+func showConfigurationsAction( writer http.ResponseWriter, db *sql.DB ) {
 	configurations := getConfigurations(db)
 	configurationTemplate.Execute(writer, configurations)
 }
 
+func saveConfigurationAction( request *http.Request, db *sql.DB ) {
+	var id = request.URL.Query().Get("id")
+
+	configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
+	// reference data, name should be essential
+	if configurationDataFromRequest.Name != "" {
+	// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
+		if id == "" {
+			err := insertConfiguration(db, configurationDataFromRequest)
+			if err != nil {
+				fmt.Println( err )
+			}
+		} else { // saved = existing item
+			// if the request contains data (other then the id) then the edited data is sent for storing
+			err := updateConfiguration(db, configurationDataFromRequest)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
+	// TODO: here a Saved or Failed message can be displayed
+	// now redirect to Configurations
+}
+
+func deleteConfigurationAction( request *http.Request, db *sql.DB ) {
+}

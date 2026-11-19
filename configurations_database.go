@@ -76,7 +76,6 @@ func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error 
 		strconv.Itoa(int(configurationData.AdditionalPrice)),
 		configurationData.AdditionalPriceDesc,
 		bytes)
-	fmt.Println("name ", configurationData.Name )
 	return err
 }
 
