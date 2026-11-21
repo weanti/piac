@@ -14,6 +14,7 @@ var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.
 var configurationTemplate = template.Must( template.ParseFiles( "templates/configurations.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
 
+
 func createDatabaseTables(db *sql.DB) error {
 	err := createPartsTable( db )
 	if err != nil {

@@ -8,7 +8,7 @@ import (
 
 // Create Parts database table
 func createPartsTable(db *sql.DB) error {
-	_, err := db.Exec(`CREATE TABLE Parts(
+	_, err := db.Exec(`CREATE TABLE Parts(	Id INTEGER PRIMARY KEY,
 						Brand TEXT NOT NULL,
 						Model TEXT NOT NULL, 
 						Description TEXT DEFAULT(''),
@@ -21,7 +21,7 @@ func createPartsTable(db *sql.DB) error {
 // Get all parts from database
 func getParts(db *sql.DB) []PartData {
 	var parts []PartData
-	rows, err := db.Query(`SELECT rowid,* from Parts;`)
+	rows, err := db.Query(`SELECT * from Parts;`)
 	defer rows.Close()
 	if err == nil {
 		for rows.Next() {
@@ -40,7 +40,7 @@ func getParts(db *sql.DB) []PartData {
 // Get specific part from database
 func getPart(db *sql.DB, id string) PartData {
 	var partData PartData
-	rows, err := db.Query("SELECT rowid,* FROM Parts WHERE rowid=?", id)
+	rows, err := db.Query("SELECT * FROM Parts WHERE Id=?", id)
 	defer rows.Close()
 	if err == nil {
 		if rows.Next() {
@@ -62,7 +62,7 @@ func updatePart(db *sql.DB, part PartData) error {
 											strconv.Itoa( int(part.Count) ) + `','` +
 											strconv.Itoa( int(part.Price) ) + `','` +
 											part.Image + `' )` +
-										` WHERE rowid = ` + part.Id + `;` )
+										` WHERE Id = ` + part.Id + `;` )
 	return err
 }
 // Create new part in database.
@@ -87,7 +87,7 @@ func insertPart(db *sql.DB, partData PartData ) error {
 }
 
 func deletePart(db *sql.DB, id string) error {
-	_, err := db.Exec("DELETE from Parts WHERE rowid = ?", id )
+	_, err := db.Exec("DELETE from Parts WHERE Id = ?", id )
 	return err
  }
 

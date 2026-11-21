@@ -4,24 +4,39 @@ import (
     "database/sql"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 )
 // Create Configurations database table
 func createConfigurationsTable(db *sql.DB) error {
 	_, err := db.Exec(`CREATE TABLE Configurations(
+						Id Integer PRIMARY KEY,
 						Name TEXT NOT NULL,
 						Description TEXT DEFAULT(''),
 						Price INTEGER DEFAULT(0),
 						AdditionalPrice INTEGER DEFAULT(0),
-						AdditionalPriceDesc TEXT DEFAULT(''),
-						Parts BLOB);`)
+						AdditionalPriceDesc TEXT DEFAULT(''));`)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(`PRAGMA foreign_keys = ON;
+				CREATE TABLE ConfigurationPart (
+					Configuration_Id INTEGER NOT NULL,
+					Part_Id INTEGER NOT NULL,
+					PRIMARY KEY (Configuration_Id, Part_Id),
+					FOREIGN KEY (Configuration_Id)
+						REFERENCES Configuration(Id)
+						ON DELETE CASCADE,
+					FOREIGN KEY (Part_Id)
+						REFERENCES Part(Id)
+						ON DELETE CASCADE );` )
 	return err
 }
 
 // Get all configurations from database
 func getConfigurations(db *sql.DB) []ConfigurationData {
 	var configurations []ConfigurationData
-	rows, err := db.Query(`SELECT rowid,* from Configurations;`)
+	rows, err := db.Query(`SELECT * from Configurations;`)
 	defer rows.Close()
 	for rows.Next() {
 		var configurationData ConfigurationData
@@ -35,7 +50,7 @@ func getConfigurations(db *sql.DB) []ConfigurationData {
 
 // Get specific configuration from database
 func getConfiguration(db *sql.DB, id string) ConfigurationData {
-	rows, err := db.Query("SELECT rowid,* FROM Configurations WHERE rowid=?", id)
+	rows, err := db.Query("SELECT * FROM Configurations WHERE Id=?", id)
 	defer rows.Close()
 	var configurationData ConfigurationData
 	if err == nil {
@@ -51,65 +66,118 @@ func getConfiguration(db *sql.DB, id string) ConfigurationData {
 
 // Create new configuration in database
 func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error {
-	var ids []uint16
-	for i := range configurationData.Parts {
-		n, err := strconv.ParseInt(configurationData.Parts[i].Id, 10, 16)
-		if err == nil {
-			ids = append(ids, uint16(n))
-		} else {
-			fmt.Println(err)
-		}
-	}
-	var bytes []byte = uint16ArrayToByteArray(ids)
-	_, err := db.Exec(`INSERT INTO Configurations(
+	rows, err := db.Query(`INSERT INTO Configurations(
 						Name,
 						Description,
 						Price,
 						AdditionalPrice,
-						AdditionalPriceDesc,
-						Parts	
+						AdditionalPriceDesc
 						)
-				VALUES(?, ?, ?, ?, ?, ?)`, configurationData.Name,
+				VALUES(?, ?, ?, ?, ?)`, configurationData.Name,
 		configurationData.Description,
 		strconv.Itoa(int(configurationData.Price)),
 		strconv.Itoa(int(configurationData.AdditionalPrice)),
-		configurationData.AdditionalPriceDesc,
-		bytes)
+		configurationData.AdditionalPriceDesc)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	// TODO: this does not seem to contain the stored ID
+	if rows.Next() {
+		err = rows.Scan(&configurationData.Id)
+		if err != nil {
+			return err
+		}
+	}
+	for _, part := range configurationData.Parts {
+		_, err = db.Exec(`INSERT INTO ConfigurationPart(Configuration_Id, Part_Id) VALUES(?,?)`, configurationData.Id, part.Id )
+		if err != nil {
+			return err
+		}
+	}
 	return err
 }
 
 // Update the configuration in database. Configuration is identified by ConfigurationData.Id, the rest is the new data.
 func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
-	var ids []uint16
-	for i := range configuration.Parts {
-		n, err := strconv.ParseInt(configuration.Parts[i].Id, 10, 16)
-		if err == nil {
-			ids = append(ids, uint16(n))
-		} else {
-			fmt.Println(err)
+	rows, err := db.Query(`SELECT Part_Id FROM ConfigurationPart WHERE Configuration_Id = ?`, configuration.Id )
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	var allOldIds []string
+	for rows.Next() {
+		var id string
+		err = rows.Scan(&id)
+		if err != nil {
+			return err
+		}
+		allOldIds = append(allOldIds, id)
+	}
+	var updateStatement string = `UPDATE Configurations 
+				SET 
+					Name = ` + configuration.Name  + `,` +
+					`Description = ` + configuration.Description + `,` +
+					`Price = ` + strconv.Itoa(int(configuration.Price)) + `,` +
+					`AdditionalPrice = ` + strconv.Itoa(int(configuration.AdditionalPrice)) + `,` +
+					`AdditionalPriceDesc = ` + configuration.AdditionalPriceDesc + `,` +
+				` WHERE Id = ` + configuration.Id
+	var allNewIds []string
+	for _, part := range configuration.Parts {
+		allNewIds = append(allNewIds, part.Id)
+	}
+	var insertStatement string = `INSERT INTO ConfigurationPart (Configuration_id, Part_Id) VALUES `
+	var insertCount int = 0
+	for _, id := range allNewIds {
+		if ! slices.Contains( allOldIds, id ) {
+			if insertCount > 0 {
+				insertStatement = insertStatement + `,`
+			}
+			insertStatement = insertStatement + `(` + configuration.Id + `,` + id + `)`
+			insertCount++
 		}
 	}
-	var bytes []byte = uint16ArrayToByteArray(ids)
-	_, err := db.Exec(`UPDATE Configurations 
-				SET Name = ?,
-					Description = ?,
-					Price = ?,
-					AdditionalPrice = ?,
-					AdditionalPriceDesc = ?,
-					Parts = ?
-				WHERE rowid = ?`,
-		configuration.Name,
-		configuration.Description,
-		strconv.Itoa(int(configuration.Price)),
-		strconv.Itoa(int(configuration.AdditionalPrice)),
-		configuration.AdditionalPriceDesc,
-		bytes,
-		configuration.Id)
+	var deleteStatement string = `DELETE FROM ConfigurationPart WHERE ( Configuration_Id, Part_Id ) IN (`
+	var deleteCount int = 0 
+	for _, id := range allOldIds {
+		if ! slices.Contains(allNewIds, id) {
+			if deleteCount > 0 {
+				deleteStatement = deleteStatement + `,`
+			}
+			deleteStatement = deleteStatement + `(` + configuration.Id + `,` + id + `)`
+		}
+	}
+//	if deleteCount > 0 {
+//		deleteStatement = deleteStatement + `);`
+//	}
+	_, err = db.Exec( `BEGIN TRANSACTION;` +
+				updateStatement +
+				deleteStatement +
+				insertStatement +
+			`COMMIT;` )
+		// TRANSACTION BEGIN
+		// update ConfigurationPart table:
+		// if Part is deleted from DB it is handled automatically
+		// find what was added to the list
+		// find what was removed from the list
+		// algo:
+		// query all part id of a config: sort the result
+		// actual = to be stored
+		// stored = in DB
+		// toremove = stored - actual
+		// toinsert = actual - stored
+		// foreach actual
+		//   if item NOT IN stored
+		//     toinsert(item)
+		// foreach stored
+		//  if item NOT IN actual
+		//     toremove(item)
+		// TRANSACTION END
 	return err
 }
 
 func deleteConfiguration(db *sql.DB, id string) error {
-	_, err := db.Exec("DELETE FROM Configurations WHERE rowid = ?", id )
+	_, err := db.Exec("DELETE FROM Configurations WHERE Id = ?", id )
 	return err
 }
 

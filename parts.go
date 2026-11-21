@@ -14,7 +14,7 @@ type PartData struct {
 	Count       int16
 	Price       int32
 	Image       string
-	Id  		string
+	Id		string	
 }
 
 // Main function for displaying parts list in parts.html
@@ -40,6 +40,7 @@ func showPartsAction( writer http.ResponseWriter, db *sql.DB ) {
 
 func savePartAction(request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
+	fmt.Println("saving part..., id", id)
 	partDataFromRequest := getPartDataFromRequest(request)
 	if partDataFromRequest.Brand != "" {
 		if id == "" {
@@ -70,6 +71,8 @@ func deletePartAction( request *http.Request, db *sql.DB ) {
 
 // Helper function that convert GET method params to PartData
 func getPartDataFromRequest( request *http.Request ) PartData {
+	//TODO variable for request.URL.Query()
+	// TODO: return error on parse errors
 	var brand = request.URL.Query().Get("brand")
 	var model = request.URL.Query().Get("model")
 	var description = request.URL.Query().Get("description")
@@ -89,6 +92,7 @@ func getPartDataFromRequest( request *http.Request ) PartData {
 	if err == nil {
 		p = int32(n)
 	}
+	n, err = strconv.ParseInt(id, 10, 32)
 	return  PartData{brand, model, description, c, p, image, id}
 }
 
