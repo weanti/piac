@@ -66,7 +66,7 @@ func getConfiguration(db *sql.DB, id string) ConfigurationData {
 
 // Create new configuration in database
 func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error {
-	rows, err := db.Query(`INSERT INTO Configurations(
+	result, err := db.Exec(`INSERT INTO Configurations(
 						Name,
 						Description,
 						Price,
@@ -81,14 +81,13 @@ func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error 
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
 	// TODO: this does not seem to contain the stored ID
-	if rows.Next() {
-		err = rows.Scan(&configurationData.Id)
-		if err != nil {
-			return err
-		}
+	var id int64
+	id, err = result.LastInsertId()
+	if err != nil {
+		return err
 	}
+	configurationData.Id = strconv.Itoa(int(id))
 	for _, part := range configurationData.Parts {
 		_, err = db.Exec(`INSERT INTO ConfigurationPart(Configuration_Id, Part_Id) VALUES(?,?)`, configurationData.Id, part.Id )
 		if err != nil {
