@@ -59,8 +59,8 @@ func configurationHandler(writer http.ResponseWriter, request *http.Request, db 
 	case "delete":
 		deleteConfigurationAction( request, db )
 	default:
-		// TODO: exit here!
-		fmt.Println("Unknown action")
+		fmt.Println("Unknown action. Exiting.")
+		os.Exit(1)
 	}
 }
 
