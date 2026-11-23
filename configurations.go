@@ -43,7 +43,12 @@ func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) Configur
 	var parts []PartData
 	var partIds = values["part"]
 	for partId := range partIds {
-		parts = append(parts, getPart(db, partIds[partId]))
+		part, err := getPart(db, partIds[partId])
+		if err != nil {
+			// TODO: add error here
+			return ConfigurationData{}
+		}
+		parts = append(parts, part)
 	}
 
 	return ConfigurationData{name, description, p, a, additionalPriceDescription, parts, id}

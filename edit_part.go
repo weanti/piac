@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 )
 
@@ -14,7 +15,11 @@ func editPartHandler(writer http.ResponseWriter, request *http.Request, db *sql.
 		// a completely new empty entry, nothing to do
 	} else {
 		// existing entry, load data for editing
-		partData = getPart(db, id)
+		var err error
+		partData, err = getPart(db, id)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 	edit_partTemplate.Execute(writer, partData)
 }

@@ -38,7 +38,7 @@ func getParts(db *sql.DB) []PartData {
 }
 
 // Get specific part from database
-func getPart(db *sql.DB, id string) PartData {
+func getPart(db *sql.DB, id string) (PartData, error) {
 	var partData PartData
 	rows, err := db.Query("SELECT * FROM Parts WHERE Id=?", id)
 	defer rows.Close()
@@ -46,11 +46,9 @@ func getPart(db *sql.DB, id string) PartData {
 		if rows.Next() {
 			partData, err = sqlRowToPartData(rows)
 		}
+		return partData, err
 	}
-	if err != nil {
-		fmt.Println(err)
-	}
-	return partData
+	return PartData{},err
 }
 
 // Update the part in database. Part is identified by PartData.Id, the rest is the new data.

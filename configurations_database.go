@@ -43,6 +43,8 @@ func getConfigurations(db *sql.DB) []ConfigurationData {
 		configurationData, err = sqlRowToConfigurationData(db, rows)
 		if err == nil {
 			configurations = append(configurations, configurationData)
+		} else {
+			fmt.Println(err)
 		}
 	}
 	return configurations
@@ -115,12 +117,12 @@ func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 	}
 	var updateStatement string = `UPDATE Configurations 
 				SET 
-					Name = ` + configuration.Name  + `,` +
-					`Description = ` + configuration.Description + `,` +
+					Name = '` + configuration.Name  + `',` +
+					`Description = '` + configuration.Description + `',` +
 					`Price = ` + strconv.Itoa(int(configuration.Price)) + `,` +
 					`AdditionalPrice = ` + strconv.Itoa(int(configuration.AdditionalPrice)) + `,` +
-					`AdditionalPriceDesc = ` + configuration.AdditionalPriceDesc + `,` +
-				` WHERE Id = ` + configuration.Id
+					`AdditionalPriceDesc = '` + configuration.AdditionalPriceDesc + `' ` +
+				` WHERE Id = '` + configuration.Id + `'`
 	var allNewIds []string
 	for _, part := range configuration.Parts {
 		allNewIds = append(allNewIds, part.Id)
@@ -146,32 +148,20 @@ func updateConfiguration(db *sql.DB, configuration ConfigurationData) error {
 			deleteStatement = deleteStatement + `(` + configuration.Id + `,` + id + `)`
 		}
 	}
-//	if deleteCount > 0 {
-//		deleteStatement = deleteStatement + `);`
-//	}
-	_, err = db.Exec( `BEGIN TRANSACTION;` +
-				updateStatement +
-				deleteStatement +
-				insertStatement +
-			`COMMIT;` )
-		// TRANSACTION BEGIN
-		// update ConfigurationPart table:
-		// if Part is deleted from DB it is handled automatically
-		// find what was added to the list
-		// find what was removed from the list
-		// algo:
-		// query all part id of a config: sort the result
-		// actual = to be stored
-		// stored = in DB
-		// toremove = stored - actual
-		// toinsert = actual - stored
-		// foreach actual
-		//   if item NOT IN stored
-		//     toinsert(item)
-		// foreach stored
-		//  if item NOT IN actual
-		//     toremove(item)
-		// TRANSACTION END
+	if deleteCount > 0 {
+		deleteStatement = deleteStatement + `);`
+	}
+
+	var statement = `BEGIN TRANSACTION;`
+	statement = statement + updateStatement + `;`
+	if deleteCount > 0 {
+		statement += deleteStatement + `;`
+	}
+	if insertCount > 0 {
+		statement += insertStatement + `;`
+	}
+	statement += `COMMIT;`
+	_, err = db.Exec( statement )
 	return err
 }
 
@@ -185,14 +175,12 @@ func sqlRowToConfigurationData(db *sql.DB, rows *sql.Rows) (ConfigurationData, e
 	var configurationData ConfigurationData
 	var name, description, additionalPriceDesc, id *string
 	var price, additionalPrice *int32
-	var bytes []byte
 	err := rows.Scan(&id,
 		&name,
 		&description,
 		&price,
 		&additionalPrice,
-		&additionalPriceDesc,
-		&bytes)
+		&additionalPriceDesc)
 	if err != nil {
 		fmt.Println(err)
 	} else {
@@ -214,16 +202,19 @@ func sqlRowToConfigurationData(db *sql.DB, rows *sql.Rows) (ConfigurationData, e
 		if id != nil {
 			configurationData.Id = *id
 		}
-		if bytes != nil {
-			// TODO: maybe do this separately: store only part ids here and fill parts in another function
-			// db shoult not be part of this function
-			var ids []uint16 = byteArrayToUint16Array(bytes)
-			for i := range ids {
-				var s string = strconv.Itoa(int(ids[i]))
-				var part PartData = getPart(db, s)
-				// TODO: how to detect error
-				configurationData.Parts = append(configurationData.Parts, part)
+		var parts *sql.Rows
+		parts, err =  db.Query("SELECT Part_Id FROM ConfigurationPart WHERE Configuration_Id = ?", configurationData.Id)
+		if err != nil {
+			return ConfigurationData{}, err
+		}
+		for parts.Next() {
+			var partId string
+			parts.Scan(&partId)
+			part, err := getPart(db, partId)
+			if err != nil {
+				return ConfigurationData{}, err
 			}
+			configurationData.Parts = append(configurationData.Parts, part)
 		}
 		return configurationData, nil
 	}
