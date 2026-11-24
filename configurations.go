@@ -19,7 +19,7 @@ type ConfigurationData struct {
 }
 
 // Helper function that convert GET method params to ConfigurationData
-func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) ConfigurationData {
+func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) (ConfigurationData, error) {
 	var values = request.URL.Query()
 	var name = values.Get("name")
 	var description = values.Get("description")
@@ -31,27 +31,28 @@ func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) Configur
 	var p int32 = 0
 	var err error
 	n, err = strconv.ParseInt(price, 10, 32)
-	if err == nil {
-		p = int32(n)
+	if err != nil {
+		return ConfigurationData{}, err
 	}
+	p = int32(n)
 	var a int32 = 0
 	n, err = strconv.ParseInt(additionalPrice, 10, 32)
-	if err == nil {
-		a = int32(n)
+	if err != nil {
+		return ConfigurationData{}, err
 	}
+	a = int32(n)
 
 	var parts []PartData
 	var partIds = values["part"]
 	for partId := range partIds {
 		part, err := getPart(db, partIds[partId])
 		if err != nil {
-			// TODO: add error here
-			return ConfigurationData{}
+			return ConfigurationData{}, err
 		}
 		parts = append(parts, part)
 	}
 
-	return ConfigurationData{name, description, p, a, additionalPriceDescription, parts, id}
+	return ConfigurationData{name, description, p, a, additionalPriceDescription, parts, id}, nil
 }
 
 // Main function for displaying configurations in configurations.html.
@@ -78,7 +79,10 @@ func showConfigurationsAction( writer http.ResponseWriter, db *sql.DB ) {
 func saveConfigurationAction( request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
 
-	configurationDataFromRequest := getConfigurationDataFromRequest(request, db)
+	configurationDataFromRequest, err := getConfigurationDataFromRequest(request, db)
+	if err != nil {
+		fmt.Println(err)
+	}
 	// reference data, name should be essential
 	if configurationDataFromRequest.Name != "" {
 		// id = "" -> unsaved item: blank page (just opened) OR new item that has no (database Id) yet
