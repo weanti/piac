@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -28,8 +29,8 @@ func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB)
 	case "delete":
 		deletePartAction( request, db )
 	default:
-		// TODO: exit here!
 		fmt.Println("Unknown action")
+		os.Exit(1)
 	}
 }
 
@@ -40,8 +41,11 @@ func showPartsAction( writer http.ResponseWriter, db *sql.DB ) {
 
 func savePartAction(request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
-	fmt.Println("saving part..., id", id)
-	partDataFromRequest := getPartDataFromRequest(request)
+	partDataFromRequest, err := getPartDataFromRequest(request)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	if partDataFromRequest.Brand != "" {
 		if id == "" {
 			// saving new item
@@ -61,38 +65,41 @@ func savePartAction(request *http.Request, db *sql.DB ) {
 }
 
 func deletePartAction( request *http.Request, db *sql.DB ) {
-	// TODO: check if id is not empty
 	var id string = request.URL.Query().Get("id")
-	err := deletePart( db, id )
-	if err != nil {
-		fmt.Println(err)
+	if id == "" {
+		fmt.Println("Deleting Part with empty id is forbidden")
+	} else {
+		err := deletePart( db, id )
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 }
 
 // Helper function that convert GET method params to PartData
-func getPartDataFromRequest( request *http.Request ) PartData {
-	//TODO variable for request.URL.Query()
-	// TODO: return error on parse errors
-	var brand = request.URL.Query().Get("brand")
-	var model = request.URL.Query().Get("model")
-	var description = request.URL.Query().Get("description")
-	var count = request.URL.Query().Get("count")
-	var price = request.URL.Query().Get("price")
-	var image = request.URL.Query().Get("image")
-	var id = request.URL.Query().Get("id")
+func getPartDataFromRequest( request *http.Request ) (PartData, error) {
+	query := request.URL.Query()
+	var brand = query.Get("brand")
+	var model = query.Get("model")
+	var description = query.Get("description")
+	var count = query.Get("count")
+	var price = query.Get("price")
+	var image = query.Get("image")
+	var id = query.Get("id")
 	var n int64
 	var c int16 = 0
 	var err error
 	n, err = strconv.ParseInt(count, 10, 16)
-	if err == nil {
-		c = int16(n)
+	if err != nil {
+		return PartData{}, err
 	}
+	c = int16(n)
 	var p int32 = 0
 	n, err = strconv.ParseInt(price, 10, 32)
-	if err == nil {
-		p = int32(n)
+	if err != nil {
+		return PartData{}, err
 	}
-	n, err = strconv.ParseInt(id, 10, 32)
-	return  PartData{brand, model, description, c, p, image, id}
+	p = int32(n)
+	return  PartData{brand, model, description, c, p, image, id}, nil
 }
 

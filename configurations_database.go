@@ -83,7 +83,6 @@ func insertConfiguration(db *sql.DB, configurationData ConfigurationData) error 
 	if err != nil {
 		return err
 	}
-	// TODO: this does not seem to contain the stored ID
 	var id int64
 	id, err = result.LastInsertId()
 	if err != nil {
