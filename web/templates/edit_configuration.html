@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>PIAC</title>
+		<link rel="stylesheet" href="/static/style.css"/>
+	</head>
+	<body>
+		<div id="menu">
+			<p><b>Menu</b></p>
+			<ul>
+				<li><a href="/index.html">Home</a></li>
+				<li><a href="/parts.html?action=show">Parts</a></li>
+				<li><a href="/edit_part.html?id=">Add part</a></li>
+				<li><a href="/configurations.html?action=show">Configurations</a></li>
+				<li><a href="/edit_configuration.html?id=">Add configuration</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<h1>Edit Configuration</h1>
+
+			<form action="configurations.html">
+				<label for="name">Name</label>
+				<input type="text" id="name" name="name" value="{{.Configuration.Name}}"><br>
+
+				<label for="description">Description</label>
+				<input type="text" id="description" name="description" value="{{.Configuration.Description}}"><br>
+
+				<label for="price">Price</label>
+				<input type="text" id="price" name="price" value="{{.Configuration.Price}}"><br>
+
+				<label for="additional_price">Additional price</label>
+				<input type="text" id="additional_price" name="additional_price" value="{{.Configuration.AdditionalPrice}}"><br>
+
+				<label for="additional_price_desc">Additional price description</label>
+				<input type="text" id="additional_price_desc" name="additional_price_desc" value="{{.Configuration.AdditionalPriceDesc}}"><br>
+
+				<table border="1" title="Parts included">
+					<caption>Parts included</caption>
+					<tr><th><!-- checkbox--></th><th>Brand</th><th>Model</th></tr>
+					{{range .Configuration.Parts}}
+					<tr><td> <input type="checkbox" name="part" value="{{.Id}}" checked	> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+					{{end}}
+				</table>
+
+				<table border="1" title="Free parts">
+					<caption>Parts not included</caption>
+					<tr><th><!-- checkbox--></th><th>Brand</th><th>Model</th></tr>
+					{{range .FreeParts}}
+					<tr><td> <input type="checkbox" name="part" value="{{.Id}}" unchecked> </td><td>{{.Brand}}</td><td>{{.Model}}</td></tr>
+					{{end}}
+				</table>
+				<input type="hidden" name="id" value="{{.Configuration.Id}}">
+				<input type="hidden" name="action" value="save">
+				<input type="submit" value="Save">
+			</form>
+		</div>
+	</body>
+</html>

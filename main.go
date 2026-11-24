@@ -9,10 +9,10 @@ import (
 	"os"
 )
 
-var partsTemplate = template.Must( template.ParseFiles("templates/parts.html") )
-var edit_partTemplate = template.Must( template.ParseFiles("templates/edit_part.html"))
-var configurationTemplate = template.Must( template.ParseFiles( "templates/configurations.html"))
-var edit_configurationTemplate =  template.Must( template.ParseFiles("templates/edit_configuration.html"))
+var partsTemplate = template.Must( template.ParseFiles("web/templates/parts.html") )
+var edit_partTemplate = template.Must( template.ParseFiles("web/templates/edit_part.html"))
+var configurationTemplate = template.Must( template.ParseFiles( "web/templates/configurations.html"))
+var edit_configurationTemplate =  template.Must( template.ParseFiles("web/templates/edit_configuration.html"))
 
 
 func createDatabaseTables(db *sql.DB) error {
@@ -53,12 +53,14 @@ func main() {
 	}
 	imagesServer := http.FileServer(http.Dir("./images"))
 	http.Handle("/images/", http.StripPrefix("/images/", imagesServer))
-	documentServer := http.FileServer(http.Dir("./templates"))
-	http.Handle("/templates/", http.StripPrefix("/templates/", documentServer))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "templates/index.html") })
-	http.HandleFunc("/templates/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
-	http.HandleFunc("/templates/edit_part.html", func( w http.ResponseWriter, r *http.Request) { editPartHandler(w, r, db) } )
-	http.HandleFunc("/templates/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
-	http.HandleFunc("/templates/edit_configuration.html", func(w http.ResponseWriter, r *http.Request) { editConfigurationHandler(w, r, db) } )
+	fileServer := http.FileServer(http.Dir("./web/static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fileServer))
+	//documentServer := http.FileServer(http.Dir("./web/templates"))
+	//http.Handle("/templates/", http.StripPrefix("/templates/", documentServer))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { http.ServeFile(w, r, "web/templates/index.html") })
+	http.HandleFunc("/parts.html", func(w http.ResponseWriter, r *http.Request) { partsHandler(w, r, db) } )
+	http.HandleFunc("/edit_part.html", func( w http.ResponseWriter, r *http.Request) { editPartHandler(w, r, db) } )
+	http.HandleFunc("/configurations.html", func(w http.ResponseWriter, r *http.Request) {configurationHandler(w, r, db) } )
+	http.HandleFunc("/edit_configuration.html", func(w http.ResponseWriter, r *http.Request) { editConfigurationHandler(w, r, db) } )
 	http.ListenAndServe(":8080", nil)
 }
