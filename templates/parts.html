@@ -1,40 +1,52 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>Parts</title>
+		<title>PIAC</title>
+		<link rel="stylesheet" href="style.css"/>
 	</head>
 	<body>
-		<h1>Parts</h1>
+		<div id="menu">
+			<p><b>Menu</b></p>
+			<ul>
+				<li><a href="index.html">Home</a></li>
+				<li><a href="parts.html?action=show">Parts</a></li>
+				<li><a href="edit_part.html?id=">Add part</a></li>
+				<li><a href="configurations.html?action=show">Configurations</a></li>
+				<li><a href="edit_configuration.html?id=">Add configuration</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<h1>Parts</h1>
 
-		<!-- parts -->
-		<table border="1" title="Parts">
-			<tr><th>Brand</th><th>Model</th><th>Description</th><th>Count</th><th>Price</th><th>Image</th><th><!-- edit --></th></tr>
-			{{range .}}
-			<tr>
-				<td>{{.Brand}}</td>
-				<td>{{.Model}}</td>
-				<td>{{.Description}}</td>
-				<td>{{.Count}}</td>
-				<td>{{.Price}}</td>
-				<td><img src="/images/{{.Image}}"></td>
-				<td>
-					<form action="edit_part.html">
-						<input type="submit" value="Edit"/>
-						<input type="hidden" name="id" value="{{.Id}}"/>
-					</form>
-					<form action="parts.html">
-						<input type="submit" value="Delete"/>
-						<input type="hidden" name="id" value="{{.Id}}"/>
-						<input type="hidden" name="action" value="delete"/>
-					</form>
-				</td>
-			</tr>
-			{{end}}
-		</table>
-		<form action="edit_part.html">
-			<input type="submit" value="Add part"/>
-			<input type="hidden" name="id" value=""/>
-		</form>
-
+			<!-- parts -->
+			<table border="1" title="Parts">
+				<tr><th>Brand</th><th>Model</th><th>Description</th><th>Count</th><th>Price</th><th>Image</th><th><!-- edit --></th></tr>
+				{{range .}}
+				<tr>
+					<td>{{.Brand}}</td>
+					<td>{{.Model}}</td>
+					<td>{{.Description}}</td>
+					<td>{{.Count}}</td>
+					<td>{{.Price}}</td>
+					<td><img src="/images/{{.Image}}"></td>
+					<td>
+						<form action="edit_part.html">
+							<input type="submit" value="Edit"/>
+							<input type="hidden" name="id" value="{{.Id}}"/>
+						</form>
+						<form action="parts.html">
+							<input type="submit" value="Delete"/>
+							<input type="hidden" name="id" value="{{.Id}}"/>
+							<input type="hidden" name="action" value="delete"/>
+						</form>
+					</td>
+				</tr>
+				{{end}}
+			</table>
+			<form action="edit_part.html">
+				<input type="submit" value="Add part"/>
+				<input type="hidden" name="id" value=""/>
+			</form>
+		</div>
 	</body>
 </html>

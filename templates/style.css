@@ -1,0 +1,22 @@
+body {
+    margin: 10px;
+    font-family: sans-serif;
+}
+
+#menu {
+    float: left;
+    width: 150px;
+    margin-right: 25px;
+}
+
+#content {
+    margin-left: 175px;
+}
+
+#menu ul {
+    padding-left: 20px;
+}
+
+#menu li {
+    margin-bottom: 8px;
+}

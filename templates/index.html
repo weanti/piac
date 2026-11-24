@@ -2,10 +2,22 @@
 <html>
 	<head>
 		<title>PIAC</title>
+		<link rel="stylesheet" href="templates/style.css"/>
 	</head>
 	<body>
-		<h1>PIAC</h1>
-		<a href="templates/parts.html?action=show">Parts</a>
-		<a href="templates/configurations.html?action=show">Configurations</a>
+		<div id="menu">
+			<p><b>Menu</b></p>
+			<ul>
+				<li><a href="templates/index.html">Home</a></li>
+				<li><a href="templates/parts.html?action=show">Parts</a></li>
+				<li><a href="templates/edit_part.html?id=">Add part</a></li>
+				<li><a href="templates/configurations.html?action=show">Configurations</a></li>
+				<li><a href="templates/edit_configuration.html?id=">Add configuration</a></li>
+			</ul>
+		</div>
+		<div id="content">
+			<h1>PIAC</h1>
+			<p>ASCII art comes here</p>
+		</div>
 	</body>
 </html>
