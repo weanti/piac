@@ -20,3 +20,7 @@ body {
 #menu li {
     margin-bottom: 8px;
 }
+
+pre {
+    text-align: center;
+}
