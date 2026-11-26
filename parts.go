@@ -25,7 +25,7 @@ func partsHandler(writer http.ResponseWriter, request *http.Request, db *sql.DB)
 	case "show":
 		showPartsAction( writer, db )
 	case "save":
-		savePartAction( request, db )
+		savePartAction( writer, request, db )
 	case "delete":
 		deletePartAction( request, db )
 	default:
@@ -39,29 +39,36 @@ func showPartsAction( writer http.ResponseWriter, db *sql.DB ) {
 	partsTemplate.Execute(writer, parts)
 }
 
-func savePartAction(request *http.Request, db *sql.DB ) {
+func savePartAction( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
 	partDataFromRequest, err := getPartDataFromRequest(request)
 	if err != nil {
-		fmt.Println(err)
+		failureMessage := "Failed to get data from form: " + err.Error()
+		saveResultTemplate.Execute(writer, failureMessage)
 		return
-	}
-	if partDataFromRequest.Brand != "" {
-		if id == "" {
-			// saving new item
-			err := insertPart(db, partDataFromRequest)
-			if err != nil {
-				fmt.Println(err)
-			}
-		} else {
-			// update existing item
-			err := updatePart(db, partDataFromRequest)
-			if err != nil {
-				fmt.Println(err)
+	} else {
+		if partDataFromRequest.Brand != "" {
+			if id == "" {
+				// saving new item
+				err := insertPart(db, partDataFromRequest)
+				if err != nil {
+					failureMessage := "Failed to save new item: " + err.Error()
+					saveResultTemplate.Execute(writer, failureMessage)
+					return
+				}
+			} else {
+				// update existing item
+				err := updatePart(db, partDataFromRequest)
+				if err != nil {
+					failureMessage := "Failed to save item: " + err.Error()
+					saveResultTemplate.Execute(writer, failureMessage)
+					return
+				}
 			}
 		}
 	}
-
+	// if everything is OK then display the Parts list
+	showPartsAction( writer, db )
 }
 
 func deletePartAction( request *http.Request, db *sql.DB ) {

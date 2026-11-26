@@ -13,6 +13,7 @@ var partsTemplate = template.Must( template.ParseFiles("web/templates/parts.html
 var edit_partTemplate = template.Must( template.ParseFiles("web/templates/edit_part.html"))
 var configurationTemplate = template.Must( template.ParseFiles( "web/templates/configurations.html"))
 var edit_configurationTemplate =  template.Must( template.ParseFiles("web/templates/edit_configuration.html"))
+var saveResultTemplate = template.Must( template.ParseFiles("web/templates/save_result.html"))
 
 
 func createDatabaseTables(db *sql.DB) error {

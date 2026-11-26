@@ -24,8 +24,8 @@ func getConfigurationDataFromRequest(request *http.Request, db *sql.DB) (Configu
 	var name = values.Get("name")
 	var description = values.Get("description")
 	var price = values.Get("price")
-	var additionalPrice = values.Get("additionalPrice")
-	var additionalPriceDescription = values.Get("additionalPriceDescription")
+	var additionalPrice = values.Get("additional_price")
+	var additionalPriceDescription = values.Get("additional_price_description")
 	var id = values.Get("id")
 	var n int64
 	var p int32 = 0
@@ -62,7 +62,7 @@ func configurationHandler(writer http.ResponseWriter, request *http.Request, db 
 	case "show":
 		showConfigurationsAction( writer, db )
 	case "save":
-		saveConfigurationAction( request, db )
+		saveConfigurationAction( writer, request, db )
 	case "delete":
 		deleteConfigurationAction( request, db )
 	default:
@@ -76,12 +76,14 @@ func showConfigurationsAction( writer http.ResponseWriter, db *sql.DB ) {
 	configurationTemplate.Execute(writer, configurations)
 }
 
-func saveConfigurationAction( request *http.Request, db *sql.DB ) {
+func saveConfigurationAction( writer http.ResponseWriter, request *http.Request, db *sql.DB ) {
 	var id = request.URL.Query().Get("id")
 
 	configurationDataFromRequest, err := getConfigurationDataFromRequest(request, db)
 	if err != nil {
-		fmt.Println(err)
+		failureMessage := "Failed to get data from form: " + err.Error()
+		saveResultTemplate.Execute(writer, failureMessage)
+		return
 	}
 	// reference data, name should be essential
 	if configurationDataFromRequest.Name != "" {
@@ -89,18 +91,23 @@ func saveConfigurationAction( request *http.Request, db *sql.DB ) {
 		if id == "" {
 			err := insertConfiguration(db, configurationDataFromRequest)
 			if err != nil {
-				fmt.Println( err )
+				failureMessage := "Failed to save new item: " + err.Error()
+				saveResultTemplate.Execute(writer, failureMessage)
+				return
 			}
 		} else { // saved = existing item
 			// if the request contains data (other then the id) then the edited data is sent for storing
 			err := updateConfiguration(db, configurationDataFromRequest)
 			if err != nil {
-				fmt.Println(err)
+				failureMessage := "Failed to save item: " + err.Error()
+				saveResultTemplate.Execute(writer, failureMessage)
+				return
 			}
 		}
 	}
-	// TODO: here a Saved or Failed message can be displayed
-	// now redirect to Configurations
+	// if everything is OK then display the Parts list
+	// TODO: here the URL need to be cleared, otherwise refresing may save the new item multiple times
+	showConfigurationsAction( writer, db )
 }
 
 func deleteConfigurationAction( request *http.Request, db *sql.DB ) {
